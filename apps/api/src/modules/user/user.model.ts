@@ -14,6 +14,7 @@ const userSchema = new Schema<IUser>({
     required: [true, 'Name is required'],
     trim: true
   },
+  
   email: {
     type: String,
     required: [true, 'Email is required'],
