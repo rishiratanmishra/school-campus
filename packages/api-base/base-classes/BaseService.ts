@@ -39,7 +39,7 @@ export interface ServiceResponse<T> {
   };
 }
 
-export class BaseService<T extends Document> {
+export class BaseService<T> {
   protected model: Model<T>;
 
   constructor(model: Model<T>) {
@@ -164,14 +164,14 @@ export class BaseService<T extends Document> {
   /**
    * Find a single document by ID
    */
-  async findById(id: string, hideKeys: string[] = []): Promise<T | null> {
+  async findById(_id: string, hideKeys: string[] = []): Promise<T | null> {
     try {
       const projection: Record<string, number> = {};
       hideKeys.forEach(key => {
         projection[key] = 0;
       });
 
-      const document = await this.model.findById(id, projection);
+      const document = await this.model.findById(_id, projection);
       return document;
     } catch (error) {
       throw error;
@@ -198,10 +198,10 @@ export class BaseService<T extends Document> {
   /**
    * Update a document by ID
    */
-  async updateById(id: string, updateData: Partial<T>): Promise<T | null> {
+  async updateById(_id: string, updateData: Partial<T>): Promise<T | null> {
     try {
       const document = await this.model.findByIdAndUpdate(
-        id,
+        _id,
         updateData,
         { new: true, runValidators: true }
       );
@@ -229,9 +229,9 @@ export class BaseService<T extends Document> {
   /**
    * Delete a document by ID
    */
-  async deleteById(id: string): Promise<T | null> {
+  async deleteById(_id: string): Promise<T | null> {
     try {
-      const document = await this.model.findByIdAndDelete(id);
+      const document = await this.model.findByIdAndDelete(_id);
       return document;
     } catch (error) {
       throw error;
