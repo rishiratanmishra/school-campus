@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { BaseController } from '@api-base/BaseController';
+import { BaseController } from '@api-base/base-classes/BaseController';
 import { IUser, UserRole } from './user.model';
 import { UserService } from './user.service';
-import { ApiResponse } from '@api-base/response';
-import { ServiceOptions } from '@api-base/BaseService';
+import { ApiResponse } from '@api-base/base-classes/response';
+import { ServiceOptions } from '@api-base/base-classes/BaseService';
 
 export class UserController extends BaseController<IUser> {
   private userService: UserService;

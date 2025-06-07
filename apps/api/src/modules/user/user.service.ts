@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { FilterQuery } from 'mongoose';
 import { IUser, UserModel, UserRole } from './user.model';
-import { BaseService, ServiceOptions, ServiceResponse } from '@api-base/BaseService';
+import { BaseService, ServiceOptions, ServiceResponse } from '@api-base/base-classes/BaseService';
 export class UserService extends BaseService<IUser> {
   constructor() {
     super(UserModel);
