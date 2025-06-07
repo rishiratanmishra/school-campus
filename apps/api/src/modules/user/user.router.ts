@@ -1,40 +1,39 @@
 import { Router } from 'express';
-import { userController } from './user.controller';
+import { UserController } from './user.controller';
 
 const router = Router();
+const userController = new UserController();
 
-// Basic CRUD operations
-router.post('/', userController.handleCreate);
-router.post('/create-advanced', userController.createUserAdvanced);
-router.post('/list', userController.handleGetAll);
-router.post('/list-advanced', userController.getAllUsersAdvanced);
-router.post('/details', userController.handleGetById);
-router.put('/:id', userController.handleUpdate);
-router.delete('/:id', userController.handleDelete);
+router.post('/', userController.createUser);
 
-// User filtering and searching
-router.post('/active', userController.getActiveUsers);
-router.post('/inactive', userController.getInactiveUsers);
-router.post('/by-role', userController.getUsersByRole);
-router.post('/search', userController.searchUsers);
-router.post('/advanced-filter', userController.advancedFilter);
+router.post('/list', userController.getAllUsers);
 
-// User-specific operations
-router.post('/by-email', userController.getUserByEmail);
-router.post('/by-domain', userController.getUsersByEmailDomain);
-router.post('/recent', userController.getRecentUsers);
+router.post('/details', userController.getUserById);
 
-// Password and status management
-router.post('/update-password', userController.updatePassword);
-router.post('/validate-password', userController.validatePassword);
-router.post('/toggle-status', userController.toggleUserStatus);
+router.put('/:_id', userController.updateUser);
 
-// Bulk operations
-router.post('/bulk-activate', userController.bulkActivateUsers);
-router.post('/bulk-deactivate', userController.bulkDeactivateUsers);
+router.delete('/:_id', userController.deleteUser);
 
-// Analytics and export
-router.get('/stats', userController.getUserStats);
-// router.post('/export', userController.exportUsers);
+router.post('/active/list', userController.getActiveUsers);
+
+router.post('/admin/list', userController.getAdminUsers);
+
+router.post('/role/:role', userController.getUsersByRole);
+
+router.post('/search/query', userController.searchUsers);
+
+router.post('/stats/overview', userController.getUserStats);
+
+router.post('/email/check', userController.checkEmailAvailability);
+
+router.patch('/:_id/toggle-status', userController.toggleUserStatus);
+
+router.patch('/:_id/change-role', userController.changeUserRole);
+
+router.patch('/:_id/update-password', userController.updatePassword);
+
+router.post('/verify/login', userController.verifyLogin);
+
+// router.post('/bulk/deactivate', userController.bulkDeactivateUsers);
 
 export default router;

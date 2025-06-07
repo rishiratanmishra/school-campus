@@ -1,42 +1,42 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  password: string;
-  role: 'USER' | 'ADMIN';
-  isActive: boolean;
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
 }
 
-const userSchema = new Schema<IUser>({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true
-  },
-  
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 6
-  },
-  role: {
-    type: String,
-    enum: ['USER', 'ADMIN'],
-    default: 'USER'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true
-});
+export class INameModel {
+  @prop({ required: true, trim: true, type: String })
+  first!: string;
 
-export const User = mongoose.model<IUser>('User', userSchema);
+  @prop({ trim: true, type: String })
+  middle?: string;
+
+  @prop({ required: true, trim: true, type: String })
+  last!: string;
+}
+
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+    collection: 'users',
+  },
+})
+export class IUser {
+  @prop({ _id: false, type: () => INameModel })
+  name?: INameModel;
+
+  @prop({ required: true, unique: true, lowercase: true, type: String })
+  email!: string;
+
+  @prop({ required: true, minlength: 6, type: String })
+  password!: string;
+
+  @prop({ enum: UserRole, default: UserRole.USER, type: String })
+  role?: UserRole;
+
+  @prop({ default: true, type: Boolean })
+  isActive!: boolean;
+}
+
+export const UserModel = getModelForClass(IUser);
