@@ -1,13 +1,16 @@
 {
-  "name": "backend",
+  "name": "api",
   "version": "1.0.0",
   "description": "",
   "main": "src/config/server.ts",
-  "scripts": {
-    "dev": "nodemon --exec ts-node src/config/server.ts",
-    "api:dev": "nodemon --exec \"ts-node -r tsconfig-paths/register\" src/config/server.ts",
-    "build": "tsc",
-    "start": "node dist/src/config/server.js"
+    "scripts": {
+    "clean": "rimraf build node_modules",
+    "start": "node -r module-alias/register ./build/config/server.js",
+    "build": "concurrently \"copyfiles -u 1 src/views/**/* build\" \"copyfiles -u 1 src/public/* build\" \"copyfiles .env build/\" \"tsc\"",
+    "dev": "concurrently \"copyfiles -u 1 src/views/**/* build\" \"copyfiles -u 1 src/public/* build\" \"copyfiles .env build/\" \"ts-node -r tsconfig-paths/register src/config/server.ts\""
+  },
+  "_moduleAliases": {
+    "@src": "./build"
   },
   "author": "",
   "license": "ISC",
@@ -31,6 +34,8 @@
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.21",
+    "concurrently": "^9.1.2",
+    "copyfiles": "^2.4.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

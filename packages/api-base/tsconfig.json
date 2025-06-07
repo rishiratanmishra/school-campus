@@ -1,0 +1,16 @@
+{
+  "extends": "typescript-config/base.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "lib": ["es2016"],
+    "outDir": "./dist",
+    "types": ["node"],
+    "baseUrl": "./",
+    "paths": {
+      "@src/*": ["src/*"]
+    },
+    "strict": false
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

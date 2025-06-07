@@ -2,15 +2,23 @@
   "name": "schoolcampus",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "app:dev": "turbo run dev --filter=./apps/frontend",
+    "app:build": "turbo run build --force --no-cache --filter=./apps/frontend",
+    "app:bundle": "turbo run bundle --force --no-cache --filter=./apps/frontend",
+    "app:start": "turbo run start --force --no-cache --filter=./apps/frontend",
+    "api:dev": "turbo run dev --filter=./apps/api",
+    "api:build": "turbo run build --force --no-cache --filter=./apps/api",
+    "api:bundle": "turbo run bundle --force --no-cache --filter=./apps/api",
+    "api:start": "turbo run start --force --no-cache --filter=./apps/api",
+    "build": "turbo run build --filter=./apps/api --filter=./apps/frontend",
     "dev": "turbo run dev --no-daemon --filter=./apps/api  --filter=./apps/frontend",
-    "dev:all": "turbo run dev",
     "lint": "turbo run lint",
+    "clean": "turbo run clean && rimraf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
-    "api:pre-dev": "turbo run api:pre-dev --filter=./packages/api-definitions --filter=./packages/api-base"
+    "api:pre-dev": "turbo run api:pre-dev  --filter=./packages/api-base"
   },
   "devDependencies": {
+    "copyfiles": "^2.4.1",
     "prettier": "^3.5.3",
     "turbo": "^2.5.3",
     "typescript": "5.8.2"
