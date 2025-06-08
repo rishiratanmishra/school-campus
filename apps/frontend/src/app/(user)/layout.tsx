@@ -2,13 +2,23 @@
 
 import AuthLayout from '@/components/layouts/authLayout/AuthLayout';
 import '../../app/globals.css';
+import { QueryClient } from '@tanstack/react-query';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // 10 minutes in milliseconds
+      staleTime: 600000,
+    },
+  },
+});
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <AuthLayout>{children}</AuthLayout>
       </body>

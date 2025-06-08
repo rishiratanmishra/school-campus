@@ -16,6 +16,7 @@ export enum BoardType {
   ICSE = 'ICSE',
   STATE = 'STATE',
   INTERNATIONAL = 'INTERNATIONAL',
+  OTHER = 'OTHER',
 }
 
 @modelOptions({
@@ -43,8 +44,8 @@ export class IOrganisation {
   @prop({ required: true, enum: OrganisationType, type: String })
   organisationType!: OrganisationType;
 
-  @prop({ required: false, type: () => [IAddress] })
-  address: IAddress[];
+  // @prop({ required: false, type: () => [IAddress] })
+  // address: IAddress[];
 
   @prop({ required: true, enum: BoardType, type: String })
   boardType!: BoardType;

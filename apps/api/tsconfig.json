@@ -6,7 +6,8 @@
     "baseUrl": "./",
     "paths": {
       "@src/*": ["src/*"],
-      "@api-base/*": ["../../packages/api-base/src/*"]
+      "@api-base/*": ["../../packages/api-base/src/*"],
+      "api-definitions/*": ["../../packages/api-definitions/src/*"],
     },
     "resolveJsonModule": true,
     "allowJs": true,
