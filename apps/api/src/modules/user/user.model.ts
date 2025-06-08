@@ -1,19 +1,10 @@
 import { prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
+import { INameModel } from '@api-base/common-schemas/index';
+import { BaseModel } from '@api-base/base-classes/BaseModel';
 
 export enum UserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',
-}
-
-export class INameModel {
-  @prop({ required: true, trim: true, type: String })
-  first!: string;
-
-  @prop({ trim: true, type: String })
-  middle?: string;
-
-  @prop({ required: true, trim: true, type: String })
-  last!: string;
 }
 
 @modelOptions({
@@ -22,7 +13,7 @@ export class INameModel {
     collection: 'users',
   },
 })
-export class IUser {
+export class IUser{
   @prop({ _id: false, type: () => INameModel })
   name?: INameModel;
 
