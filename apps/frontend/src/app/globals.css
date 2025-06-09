@@ -479,3 +479,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+.dark select.rdp-dropdown {
+  background-color: hsl(var(--popover));      /* matches your popover bg */
+  color: hsl(var(--popover-foreground));      /* matches text color */
+  border-color: hsl(var(--input));            /* optional: matching border */
+}
+
+.dark select.rdp-dropdown option {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}

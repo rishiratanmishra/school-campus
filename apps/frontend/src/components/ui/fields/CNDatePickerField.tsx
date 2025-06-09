@@ -1,117 +1,79 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState, useEffect } from "react";
-import { useField } from "formik"; 
-import { format } from "date-fns";
+import * as React from 'react';
+import { useField } from 'formik';
+import { format } from 'date-fns';
 
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { CalendarIcon } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
-interface CNDatePickerFieldProps {
-  label?: string;
+type CNDatePickerFieldProps = {
   name: string;
-  description?: string;
-  containerClass?: string;
-  labelClass?: string;
-  errorClass?: string;
-  descriptionClass?: string;
-  required?: boolean;
-  disabled?: boolean;
-  minDate?: Date;
-  maxDate?: Date;
-}
+  label?: string;
+  placeholder?: string;
+  fromYear?: number;
+  toYear?: number;
+  className?: string;
+};
 
 export const CNDatePickerField: React.FC<CNDatePickerFieldProps> = ({
-  label,
   name,
-  description,
-  containerClass,
-  labelClass,
-  errorClass,
-  descriptionClass,
-  required = false,
-  disabled = false,
-  minDate,
-  maxDate,
+  label,
+  placeholder = 'Select date',
+  fromYear = 1950,
+  toYear = new Date().getFullYear(),
+  className,
 }) => {
   const [field, meta, helpers] = useField(name);
-  const [open, setOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    field.value ? new Date(field.value) : undefined
-  );
+  const [open, setOpen] = React.useState(false);
 
-  useEffect(() => {
-    if (field.value) {
-      setSelectedDate(new Date(field.value));
-    }
-  }, [field.value]);
-
-  const formattedDate = selectedDate ? format(selectedDate, "PPP") : "Select date";
-
-  const onSelectDate = (date: Date | undefined) => {
-    setSelectedDate(date);
-    helpers.setValue(date ? date.toISOString() : "");
+  const handleSelect = (date: Date | undefined) => {
+    helpers.setValue(date);
     setOpen(false);
   };
 
   return (
-    <div className={cn("space-y-1", containerClass)}>
-      {label && (
-        <label
-          htmlFor={name}
-          className={cn(
-            "block text-sm font-medium text-foreground",
-            meta.touched && meta.error ? "text-destructive" : "",
-            labelClass
-          )}
-        >
-          {label}
-          {required && <span className="text-destructive"> *</span>}
-        </label>
-      )}
-
-      {description && (
-        <p className={cn("text-sm text-muted-foreground", descriptionClass)}>{description}</p>
-      )}
-
+    <div className={cn('w-full space-y-2', className)}>
+      {label && <Label htmlFor={name}>{label}</Label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label={label}
-            disabled={disabled}
             className={cn(
-              "w-full justify-start text-left font-normal",
-              !selectedDate && "text-muted-foreground"
+              'w-full justify-start text-left font-normal bg-background text-foreground',
+              !field.value && 'text-muted-foreground'
             )}
           >
-            {formattedDate}
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {field.value ? format(field.value, 'dd MMM yyyy') : placeholder}
           </Button>
         </PopoverTrigger>
-
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          className="w-auto p-0 bg-background text-foreground"
+          align="start"
+        >
           <Calendar
             mode="single"
-            selected={selectedDate}
-            onSelect={onSelectDate}
-            disabled={(date) => 
-              (minDate && date < minDate) || (maxDate && date > maxDate) ? true : false
-            }
+            captionLayout="dropdown"
+            selected={field.value}
+            onSelect={handleSelect}
+            fromYear={fromYear}
+            toYear={toYear}
             initialFocus
           />
         </PopoverContent>
       </Popover>
-
-      {meta.touched && meta.error && (
-        <p className={cn("text-sm text-destructive", errorClass)}>{meta.error}</p>
-      )}
+      {meta.touched && meta.error ? (
+        <p className="text-sm text-red-500">{meta.error}</p>
+      ) : null}
     </div>
   );
 };
-
-export default CNDatePickerField;

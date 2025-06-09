@@ -60,8 +60,7 @@ const AdminDashboard = () => {
               Add New School
             </SheetTitle>
             <SheetDescription>
-              Create a new educational institution in your system. Fill out the
-              form below with the school details.
+              Fill out the form below with the school details.
             </SheetDescription>
           </SheetHeader>
 
