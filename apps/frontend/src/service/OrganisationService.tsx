@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
-import { Axios } from 'axios';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Axios, AxiosInstance } from 'axios';
 import { API_BASE_URL, QUERY_KEYS } from '.';
 import { callApi } from '@/lib/callApi';
 import { queryClient } from '@/app/(user)/layout';
@@ -23,3 +23,19 @@ export const useCreateOrganisation = () =>
       }
     },
   });
+
+export const getOrganisationList = (payload: any) => (axiosInstance: AxiosInstance) =>
+  axiosInstance.post(`${ORGANISATION_BASE_URL}/list`, payload);
+
+export const useGetOrganisationList = (payload: any) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.ORGANISATION, payload],
+    queryFn: async () => {
+      const result = await callApi({
+        requestFunction: getOrganisationList(payload),
+        showToastOnSuccess: false,
+      });
+      return result.data;
+    },
+  });
+};
