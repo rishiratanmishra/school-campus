@@ -13,8 +13,7 @@ import { validateZodSchemaFormik } from '@/components/ui/data-entry/ZodHelper';
 import OrganisationZodSchema, {
   IOrganisationZS,
 } from 'api-definitions/features/organisation/organisation.zod';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Building2,
   Globe,
@@ -57,14 +56,16 @@ interface OrganisationFormContentProps {
 const OrganisationFormContent: React.FC<OrganisationFormContentProps> = ({
   isSubmitting = false,
 }) => (
-  <div className="space-y-6 sm:space-y-8">
-    {/* Basic Information Section */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <Building2 className="h-4 w-4" />
-        Basic Information
-      </div>
-      <div className="space-y-3 sm:space-y-4 pl-4 sm:pl-6">
+  <div className="space-y-6">
+    {/* Basic Information Card */}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <Building2 className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Basic Information</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CNTextInputField
           label="Organisation Name"
           name="name"
@@ -75,20 +76,20 @@ const OrganisationFormContent: React.FC<OrganisationFormContentProps> = ({
           label="Slug"
           name="slug"
           placeholder="e.g., my-school"
-          description="URL-friendly identifier for the organisation"
+          description="URL-friendly identifier"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
 
-    <Separator />
-
-    {/* Online Presence Section */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <Globe className="h-4 w-4" />
-        Online Presence
-      </div>
-      <div className="space-y-3 sm:space-y-4 pl-4 sm:pl-6">
+    {/* Online Presence Card */}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <Globe className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Online Presence</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CNTextInputField
           label="Website Domain"
           name="domain"
@@ -97,99 +98,88 @@ const OrganisationFormContent: React.FC<OrganisationFormContentProps> = ({
         <CNDatePickerField
           label="Established Date"
           name="established"
-          description="When was the organisation founded?"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
 
-    <Separator />
-
-    {/* Description Section */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <FileText className="h-4 w-4" />
-        Description
-      </div>
-      <div className="pl-4 sm:pl-6">
+    {/* Description Card */}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <FileText className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Description</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
         <CNTextAreaField
           label="About the Organisation"
           name="description"
           rows={4}
-          placeholder="Brief description of the organisation, its mission, and key features..."
-          description="This helps identify the organisation's purpose and scope"
+          placeholder="Brief description of the organisation..."
+          description="Mission, vision, and key features"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
 
-    <Separator />
-
-    {/* Classification Section */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <GraduationCap className="h-4 w-4" />
-        Classification
-      </div>
-      <div className="space-y-3 sm:space-y-4 pl-4 sm:pl-6">
+    {/* Classification Card */}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <GraduationCap className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Classification</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CNSelectField
           label="Organisation Type"
           name="organisationType"
           required
-          placeholder="Select organisation type"
+          placeholder="Select type"
           options={ORGANISATION_TYPE_OPTIONS}
-          description="Primary category of educational institution"
         />
         <CNSelectField
-          label="Board/Curriculum Type"
+          label="Board/Curriculum"
           name="boardType"
-          placeholder="Select board type"
+          placeholder="Select board"
           options={BOARD_TYPE_OPTIONS}
-          description="Educational board or curriculum followed"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
 
-    <Separator />
-
-    {/* Status Section */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <Award className="h-4 w-4" />
-        Status
-      </div>
-      <div className="pl-4 sm:pl-6">
+    {/* Status Card */}
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <Award className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Status</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
         <CNCheckboxField
           label="Active Organisation"
           name="isActive"
           description="Enable this organisation for operations"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
 
-    <Separator />
-
-    {/* Submit Section */}
-    <div className="sticky -bottom-10 bg-background border-t mt-2">
-      <div className="py-4">
-        <Button
-          type="submit"
-          className="w-full h-11 text-base font-medium"
-          disabled={isSubmitting}
-          size="lg"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              Creating Organisation...
-            </>
-          ) : (
-            'Create Organisation'
-          )}
-        </Button>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
-          By creating this organisation, you confirm that all information
-          provided is accurate.
-        </p>
-      </div>
+    {/* Submit Button */}
+    <div className="sticky -bottom-3 bg-background pt-4 pb-6 border-t">
+      <Button
+        type="submit"
+        className="w-full h-12 text-base font-medium"
+        disabled={isSubmitting}
+        size="lg"
+      >
+        {isSubmitting ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+            Creating Organisation...
+          </>
+        ) : (
+          'Create Organisation'
+        )}
+      </Button>
     </div>
   </div>
 );

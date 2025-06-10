@@ -5,6 +5,8 @@ import { BaseModel } from '@api-base/base-classes/BaseModel';
 export enum UserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
 }
 
 @modelOptions({
