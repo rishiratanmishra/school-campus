@@ -36,4 +36,4 @@ router.post('/verify/login', userController.verifyLogin);
 
 // router.post('/bulk/deactivate', userController.bulkDeactivateUsers);
 
-export default router;
+export const UserRouter = router;

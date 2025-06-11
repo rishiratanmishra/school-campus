@@ -14,8 +14,9 @@ import {
 import AddOrganisationForm from '../forms/AddOrganisationForm';
 import AddStudentForm from '../../student/forms/AddStudentForm';
 import { useGetOrganisationList } from '@/service/OrganisationService';
+import AddTeacherForm from '../../teacher/forms/AddTeacherForm';
 
-type DrawerType = 'organisation' | 'student' | null;
+type DrawerType = 'organisation' | 'student' | 'teacher' | null;
 
 const drawerConfig: Record<
   Exclude<DrawerType, null>,
@@ -37,6 +38,12 @@ const drawerConfig: Record<
     description: 'Fill out the form below with the student details.',
     icon: <UserPlus className="h-5 w-5 text-primary" />,
     content: (onClose) => <AddStudentForm onFormSubmit={onClose} />,
+  },
+  teacher: {
+    title: 'Add New Teacher',
+    description: 'Fill out the form below with the teacher details.',
+    icon: <UserPlus className="h-5 w-5 text-primary" />,
+    content: (onClose) => <AddTeacherForm onFormSubmit={onClose} />,
   },
 };
 
@@ -62,7 +69,12 @@ const AdminDashboard = () => {
       variant: undefined,
       onClick: () => openDrawer('student'),
     },
-    { label: 'Add New Teacher', icon: UserPlus, variant: undefined },
+    {
+      label: 'Add New Teacher',
+      icon: UserPlus,
+      variant: undefined,
+      onClick: () => openDrawer('teacher'),
+    },
     { label: 'Create Exam Schedule', icon: BookOpen, variant: undefined },
   ];
 
