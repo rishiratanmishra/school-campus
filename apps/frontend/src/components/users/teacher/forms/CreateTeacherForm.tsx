@@ -1,34 +1,22 @@
 'use client';
 
 import React from 'react';
-import { FormikHelpers } from 'formik';
 import { Button } from '@/components/ui/button';
-import { FormikForm } from '@/components/ui/data-entry/FormikForm';
 import {
   CNTextInputField,
-  CNSelectField,
   CNCheckboxField,
 } from '@/components/ui/fields';
+import { CardContent } from '@/components/ui/card';
+import { FormikForm } from '@/components/ui/data-entry/FormikForm';
+import { FormikHelpers } from 'formik';
 import { validateZodSchemaFormik } from '@/components/ui/data-entry/ZodHelper';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, AtSign, Calendar, Award } from 'lucide-react';
-import StudentZodSchema, {
-  IStudentZS,
-} from 'api-definitions/features/student/student.zod';
+import TeacherZodSchema, { ITeacherZS } from 'api-definitions/features/teacher/teacher.zod';
 
-export type StudentFormValues = IStudentZS;
-
-const validateForm = (values: StudentFormValues) =>
-  validateZodSchemaFormik({
-    schema: StudentZodSchema,
-    values,
-  });
-
-interface CreateStudentFormContentProps {
+interface CreateTeacherFormContentProps {
   isSubmitting?: boolean;
 }
 
-const CreateStudentFormContent: React.FC<CreateStudentFormContentProps> = ({
+const CreateTeacherFormContent: React.FC<CreateTeacherFormContentProps> = ({
   isSubmitting = false,
 }) => (
   <div className="space-y-6">
@@ -36,14 +24,13 @@ const CreateStudentFormContent: React.FC<CreateStudentFormContentProps> = ({
       <CNTextInputField
         label="First Name"
         name="name.first"
-        placeholder="e.g. Rahul"
+        placeholder="e.g. Sunita"
         required
       />
       <CNTextInputField
         label="Middle Name"
         name="name.middle"
-        placeholder="e.g. Kumar"
-        required
+        placeholder="e.g. Kumari"
       />
       <CNTextInputField
         label="Last Name"
@@ -55,24 +42,25 @@ const CreateStudentFormContent: React.FC<CreateStudentFormContentProps> = ({
         label="Email"
         name="email"
         type="email"
-        placeholder="e.g. rahul@example.com"
+        placeholder="e.g. sunita@example.com"
         required
       />
       <CNTextInputField
-        label="Age"
-        name="age"
-        type="number"
-        placeholder="e.g. 16"
-        required
+        label="Phone Number"
+        name="phoneNumber"
+        placeholder="e.g. 9876543210"
       />
-
-      <CNCheckboxField
-        label="Active Profile"
-        name="isActive"
-        description="Enable student profile"
+      <CNTextInputField
+        label="Qualification"
+        name="qualification"
+        placeholder="e.g. M.Sc Mathematics"
+      />
+      <CNTextInputField
+        label="Department"
+        name="department"
+        placeholder="e.g. Science"
       />
     </CardContent>
-    {/* </Card> */}
 
     <div className="sticky -bottom-3 bg-background pt-4 pb-6 border-t">
       <Button
@@ -84,26 +72,36 @@ const CreateStudentFormContent: React.FC<CreateStudentFormContentProps> = ({
         {isSubmitting ? (
           <>
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-            Creating Student...
+            Creating Teacher...
           </>
         ) : (
-          'Create Student'
+          'Create Teacher'
         )}
       </Button>
     </div>
   </div>
 );
 
-interface CreateStudentFormProps {
-  initialValues: Partial<StudentFormValues>;
+
+
+export type TeacherFormValues = ITeacherZS;
+
+const validateForm = (values: TeacherFormValues) =>
+  validateZodSchemaFormik({
+    schema: TeacherZodSchema,
+    values,
+  });
+
+interface CreateTeacherFormProps {
+  initialValues: Partial<TeacherFormValues>;
   onSubmit: (
-    values: StudentFormValues,
-    formikHelpers: FormikHelpers<StudentFormValues>
+    values: TeacherFormValues,
+    formikHelpers: FormikHelpers<TeacherFormValues>
   ) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 
-const CreateStudentForm: React.FC<CreateStudentFormProps> = ({
+const CreateTeacherForm: React.FC<CreateTeacherFormProps> = ({
   initialValues,
   onSubmit,
   isSubmitting = false,
@@ -115,9 +113,9 @@ const CreateStudentForm: React.FC<CreateStudentFormProps> = ({
       validate={validateForm}
       enableReinitialize
     >
-      <CreateStudentFormContent isSubmitting={isSubmitting} />
+      <CreateTeacherFormContent isSubmitting={isSubmitting} />
     </FormikForm>
   );
 };
 
-export default CreateStudentForm;
+export default CreateTeacherForm;

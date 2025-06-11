@@ -1,10 +1,12 @@
 import { Application } from 'express';
-import userRoutes from '../modules/user/user.router';
-import organisationRoutes from '../modules/organisation/organisation.router';
-import studentRoutes from '../modules/student/student.router';
+import { TeacherRouter } from './teacher/teacher.router';
+import { StudentRouter } from './student/student.router';
+import { UserRouter } from './user/user.router';
+import { OrganisationRouter } from './organisation/organisation.router';
 
 export default function initializeModules(app: Application): void {
-  app.use('/api/users', userRoutes);
-  app.use('/api/organisation', organisationRoutes);
-  app.use('/api/students', studentRoutes);
+  app.use('/api/users', UserRouter);
+  app.use('/api/organisation', OrganisationRouter);
+  app.use('/api/students', StudentRouter);
+  app.use('/api/teachers', TeacherRouter)
 }

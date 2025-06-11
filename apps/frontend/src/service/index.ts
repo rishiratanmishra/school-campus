@@ -7,4 +7,5 @@ export const QUERY_KEYS = {
   USERS: 'users',
   ORGANISATION: 'organisation',
   STUDENTS: 'students',
+  TEACHERS: 'teachers',
 };
