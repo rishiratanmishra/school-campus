@@ -56,112 +56,73 @@ interface OrganisationFormContentProps {
 const OrganisationFormContent: React.FC<OrganisationFormContentProps> = ({
   isSubmitting = false,
 }) => (
-  <div className="space-y-6">
+  <div className="space-y-3">
     {/* Basic Information Card */}
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Basic Information</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CNTextInputField
-          label="Organisation Name"
-          name="name"
-          placeholder="Enter organisation name"
-          required
-        />
-        <CNTextInputField
-          label="Slug"
-          name="slug"
-          placeholder="e.g., my-school"
-          description="URL-friendly identifier"
-        />
-      </CardContent>
-    </Card>
+
+    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CNTextInputField
+        label="Organisation Name"
+        name="name"
+        placeholder="Enter organisation name"
+        required
+      />
+      <CNTextInputField
+        label="Slug"
+        name="slug"
+        placeholder="e.g., my-school"
+      />
+    </CardContent>
 
     {/* Online Presence Card */}
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <Globe className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Online Presence</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CNTextInputField
-          label="Website Domain"
-          name="domain"
-          placeholder="e.g., example.com"
-        />
-        <CNDatePickerField
-          label="Established Date"
-          name="established"
-        />
-      </CardContent>
-    </Card>
+
+    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CNTextInputField
+        label="Website Domain"
+        name="domain"
+        placeholder="e.g., example.com"
+      />
+      <CNDatePickerField label="Established Date" name="established" />
+    </CardContent>
 
     {/* Description Card */}
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Description</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <CNTextAreaField
-          label="About the Organisation"
-          name="description"
-          rows={4}
-          placeholder="Brief description of the organisation..."
-          description="Mission, vision, and key features"
-        />
-      </CardContent>
-    </Card>
+
+    <CardContent>
+      <CNTextAreaField
+        label="About the Organisation"
+        name="description"
+        rows={4}
+        placeholder="Brief description of the organisation..."
+        description="Mission, vision, and key features"
+      />
+    </CardContent>
 
     {/* Classification Card */}
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Classification</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CNSelectField
-          label="Organisation Type"
-          name="organisationType"
-          required
-          placeholder="Select type"
-          options={ORGANISATION_TYPE_OPTIONS}
-        />
-        <CNSelectField
-          label="Board/Curriculum"
-          name="boardType"
-          placeholder="Select board"
-          options={BOARD_TYPE_OPTIONS}
-        />
-      </CardContent>
-    </Card>
+
+    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CNSelectField
+        label="Organisation Type"
+        name="organisationType"
+        required
+        placeholder="Select type"
+        options={ORGANISATION_TYPE_OPTIONS}
+      />
+      <CNSelectField
+        label="Board/Curriculum"
+        name="boardType"
+        placeholder="Select board"
+        options={BOARD_TYPE_OPTIONS}
+      />
+    </CardContent>
 
     {/* Status Card */}
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <Award className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Status</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <CNCheckboxField
-          label="Active Organisation"
-          name="isActive"
-          description="Enable this organisation for operations"
-        />
-      </CardContent>
-    </Card>
+
+    <CardContent>
+      <CNCheckboxField
+        label="Active Organisation"
+        name="isActive"
+        description="Enable this organisation for operations"
+      />
+    </CardContent>
 
     {/* Submit Button */}
     <div className="sticky -bottom-3 bg-background pt-4 pb-6 border-t">

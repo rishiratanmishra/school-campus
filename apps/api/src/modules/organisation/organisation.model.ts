@@ -1,28 +1,19 @@
-import { BaseModel } from '@api-base/base-classes/BaseModel';
-import { IAddress } from '@api-base/common-schemas';
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose';
-
-export enum OrganisationType {
-  SCHOOL = 'SCHOOL',
-  COLLEGE = 'COLLEGE',
-  UNIVERSITY = 'UNIVERSITY',
-  TRAINING_INSTITUTE = 'TRAINING_INSTITUTE',
-  COACHING = 'COACHING',
-  OTHER = 'OTHER',
-}
-
-export enum BoardType {
-  CBSE = 'CBSE',
-  ICSE = 'ICSE',
-  STATE = 'STATE',
-  INTERNATIONAL = 'INTERNATIONAL',
-  OTHER = 'OTHER',
-}
+import {
+  getModelForClass,
+  modelOptions,
+  prop,
+  Ref,
+} from '@typegoose/typegoose';
+import { BoardType, OrganisationType } from './OrgEnums';
+import { IAddress, ISocialMedia, IContactInfo } from '@api-base/common-schemas';
+import { IUser } from '../user/user.model';
 
 @modelOptions({
   schemaOptions: {
     timestamps: true,
     collection: 'organisations',
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 })
 export class IOrganisation {
@@ -30,28 +21,43 @@ export class IOrganisation {
   name!: string;
 
   @prop({ required: false, unique: true, lowercase: true, type: String })
-  slug: string;
+  slug?: string;
 
-  @prop({ type: String })
+  @prop({ required: false, type: String })
   domain?: string;
 
-  @prop({ type: Date })
+  @prop({ required: false, type: String })
+  logo?: string;
+
+  @prop({ required: false, type: String })
+  coverImage?: string;
+
+  @prop({ required: false, type: Date })
   established?: Date;
 
-  @prop({ type: String })
+  @prop({ required: false, type: String })
+  motto?: string;
+
+  @prop({ required: false, type: String })
   description?: string;
 
   @prop({ required: true, enum: OrganisationType, type: String })
   organisationType!: OrganisationType;
 
-  // @prop({ required: false, type: () => [IAddress] })
-  // address: IAddress[];
+  @prop({ required: false, type: () => [IAddress] })
+  address?: IAddress[];
 
   @prop({ required: true, enum: BoardType, type: String })
   boardType!: BoardType;
 
-  @prop({ default: true, type: Boolean })
-  isActive!: boolean;
+  @prop({ required: false, type: Object })
+  socialMedia?: ISocialMedia;
+
+  @prop({ required: false, type: Object })
+  contactInfo?: IContactInfo;
+
+  @prop({ required: false, type: () => [IUser] })
+  adminIds?: Ref<IUser>[];
 }
 
 export const OrganisationModel = getModelForClass(IOrganisation);

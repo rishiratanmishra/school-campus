@@ -31,13 +31,13 @@ interface CreateStudentFormContentProps {
 const CreateStudentFormContent: React.FC<CreateStudentFormContentProps> = ({
   isSubmitting = false,
 }) => (
-  <div className="space-y-6">
+  <div className="space-y-3">
     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <CNTextInputField
         label="First Name"
         name="name.first"
         placeholder="e.g. Rahul"
-        required
+        required-
       />
       <CNTextInputField
         label="Middle Name"

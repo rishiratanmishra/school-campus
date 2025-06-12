@@ -1,0 +1,18 @@
+export enum OrganisationType {
+  SCHOOL = 'SCHOOL',
+  COLLEGE = 'COLLEGE',
+  UNIVERSITY = 'UNIVERSITY',
+  TRAINING_INSTITUTE = 'TRAINING_INSTITUTE',
+  COACHING = 'COACHING',
+  OTHER = 'OTHER',
+}
+
+export enum BoardType {
+  CBSE = 'CBSE',
+  ICSE = 'ICSE',
+  IB = 'IB',
+  IGCSE = 'IGCSE',
+  STATE = 'STATE',
+  INTERNATIONAL = 'INTERNATIONAL',
+  OTHER = 'OTHER',
+}
