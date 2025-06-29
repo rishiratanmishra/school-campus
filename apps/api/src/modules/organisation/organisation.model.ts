@@ -29,7 +29,7 @@ export class IOrganisation {
   @prop({ required: true, type: String })
   name!: string;
 
-  @prop({ required: false, unique: true, lowercase: true, type: String })
+  @prop({ required: false, unique: true, sparse:true , lowercase: true, type: String })
   slug: string;
 
   @prop({ type: String })

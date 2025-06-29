@@ -30,7 +30,7 @@ export const OrganisationZodSchema = z.object({
     .refine((val) => !val || /^[a-z0-9.-]+\.[a-z]{2,}$/.test(val), {
       message: 'Domain must be a valid format (e.g., example.com)',
     }),
-  established: z.string().optional(),
+  established: z.date().optional(),
   description: z.string().optional(),
   organisationType: OrganisationTypeEnum,
   boardType: BoardTypeEnum,
