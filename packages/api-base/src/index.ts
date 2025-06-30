@@ -1,1 +1,2 @@
-export * from'./base-classes';
+export * from './base-classes';
+export * from './common-schemas';

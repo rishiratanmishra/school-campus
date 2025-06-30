@@ -6,6 +6,7 @@ import {
   Ref,
 } from '@typegoose/typegoose';
 import { IUser } from '../user/user.model';
+import { IOrganisation } from '../organisation/organisation.model';
 
 @modelOptions({
   schemaOptions: {
@@ -28,6 +29,9 @@ export class ITeacher {
 
   @prop({ ref: () => IUser })
   userProfileId?: Ref<IUser>;
+
+  @prop({ ref: () => IOrganisation })
+  organisationId?: Ref<IOrganisation>;
 
   @prop({ default: true, type: Boolean })
   isActive!: boolean;

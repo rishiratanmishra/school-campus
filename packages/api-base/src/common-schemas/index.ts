@@ -11,6 +11,7 @@ export class INameModel {
   last!: string;
 }
 
+
 @modelOptions({ schemaOptions: { _id: false } })
 export class IGeoLocation {
   @prop({ required: true, type: Number })
@@ -42,4 +43,36 @@ export class IAddress {
 
   @prop({ required: false, type: () => IGeoLocation })
   geoLocation?: IGeoLocation;
+}
+
+
+
+export enum SubscriptionPlan {
+  FREE = 'FREE',
+  BASIC = 'BASIC',
+  STANDARD = 'STANDARD',
+  PREMIUM = 'PREMIUM',
+  ENTERPRISE = 'ENTERPRISE',
+}
+
+export enum PaymentCycle {
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  YEARLY = 'YEARLY',
+  BIANNUAL = 'BIANNUAL',
+}
+
+export interface ISocialMedia {
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  instagram?: string;
+  youtube?: string;
+}
+
+export interface IContactInfo {
+  phone: string[];
+  email: string[];
+  website?: string;
+  emergencyContact?: string;
 }

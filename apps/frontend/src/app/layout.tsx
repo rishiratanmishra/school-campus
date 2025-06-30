@@ -1,8 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
 import { ThemeProvider } from '@/lib/providers/ThemeProvider';
 import ReactQueryProvider from '@/lib/providers/ReactQueryProvider';
 import { Toaster } from 'sonner';
@@ -22,13 +20,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(inter.className)}>
+      <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <ReactQueryProvider>
-            <AnimatePresence mode="wait">
               <Toaster richColors position="top-right" />
               {children}
-            </AnimatePresence>
           </ReactQueryProvider>
         </ThemeProvider>
       </body>
