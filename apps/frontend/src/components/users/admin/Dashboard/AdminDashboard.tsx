@@ -15,6 +15,7 @@ import AddOrganisationForm from '../forms/AddOrganisationForm';
 import AddStudentForm from '../../student/forms/AddStudentForm';
 import { useGetOrganisationList } from '@/service/OrganisationService';
 import AddTeacherForm from '../../teacher/forms/AddTeacherForm';
+import DashboardMenu from './DashboardMenu/DashboardMenu';
 
 type DrawerType = 'organisation' | 'student' | 'teacher' | null;
 
@@ -82,6 +83,9 @@ const AdminDashboard = () => {
 
   return (
     <>
+      <div style={{ height: '200px', overflow:'hidden' }} className="flex flex-col">
+        <DashboardMenu />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
         <div className="col-span-2 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
