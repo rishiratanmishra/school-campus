@@ -18,19 +18,13 @@ export const BoardTypeEnum = z.enum([
 
 export const OrganisationZodSchema = z.object({
   name: z.string().min(1, 'Organisation name is required'),
-  slug: z
-    .string()
-    .optional()
-    .refine((val) => !val || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(val), {
-      message: 'Slug must be URL-friendly (lowercase, dash-separated)',
-    }),
+  // slug: z
+  //   .string()
+  //   .optional(),
   domain: z
     .string()
-    .optional()
-    .refine((val) => !val || /^[a-z0-9.-]+\.[a-z]{2,}$/.test(val), {
-      message: 'Domain must be a valid format (e.g., example.com)',
-    }),
-  established: z.string().optional(),
+    .optional(),
+  established: z.date().optional(),
   description: z.string().optional(),
   organisationType: OrganisationTypeEnum,
   boardType: BoardTypeEnum,

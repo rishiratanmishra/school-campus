@@ -19,7 +19,7 @@ interface CreateTeacherFormContentProps {
 const CreateTeacherFormContent: React.FC<CreateTeacherFormContentProps> = ({
   isSubmitting = false,
 }) => (
-  <div className="space-y-6">
+  <div className="space-y-3">
     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <CNTextInputField
         label="First Name"
