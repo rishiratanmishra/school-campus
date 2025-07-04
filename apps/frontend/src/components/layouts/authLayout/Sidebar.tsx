@@ -110,10 +110,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  John Doe
+                  Rishi Ratan Mishra
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  john@example.com
+                  rishiratanmishra2@gmail.com
                 </p>
               </div>
             </div>

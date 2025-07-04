@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Menu, Sun, Moon, ChevronRight, ChevronDown, User, Settings, LogOut } from 'lucide-react';
+import {
+  Bell,
+  Menu,
+  Sun,
+  Moon,
+  ChevronRight,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 import Sidebar from './Sidebar';
 import {
   LOCAL_STORAGE_DARK_KEY,
@@ -56,7 +66,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="flex h-screen overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
+
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <motion.header
             initial={{ opacity: 0, y: -20 }}
@@ -75,7 +85,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 </button>
 
                 <h1 className="text-lg font-semibold text-foreground">
-                  Dashboard
+                  School Campus
                 </h1>
               </div>
 
@@ -106,9 +116,16 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         </div>
                         <div className="max-h-60 overflow-y-auto">
                           {[1, 2, 3].map((item) => (
-                            <div key={item} className="p-3 hover:bg-muted/50 rounded-lg cursor-pointer">
-                              <div className="text-sm font-medium">Notification {item}</div>
-                              <div className="text-xs text-muted-foreground">This is a sample notification</div>
+                            <div
+                              key={item}
+                              className="p-3 hover:bg-muted/50 rounded-lg cursor-pointer"
+                            >
+                              <div className="text-sm font-medium">
+                                Notification {item}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                This is a sample notification
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -161,10 +178,12 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="p-4 border-b border-border/50">
-                          <div className="text-sm font-medium">John Doe</div>
-                          <div className="text-xs text-muted-foreground">john@example.com</div>
+                          <div className="text-sm font-medium">Rishi Ratan Mishra</div>
+                          <div className="text-xs text-muted-foreground">
+                            rishiratanmishra2@gmail.com
+                          </div>
                         </div>
-                        
+
                         <button className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors">
                           <User className="h-4 w-4 mr-3" />
                           Profile
@@ -205,10 +224,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                                     key={t}
                                     onClick={() => setTheme(t)}
                                     className={`w-full flex items-center px-8 py-2 text-left text-sm hover:bg-muted/30 transition-colors ${
-                                      theme === t ? 'font-medium text-primary' : ''
+                                      theme === t
+                                        ? 'font-medium text-primary'
+                                        : ''
                                     }`}
                                   >
-                                    <div className={`h-3 w-3 mr-2 rounded-full bg-${t}-500`} />
+                                    <div
+                                      className={`h-3 w-3 mr-2 rounded-full bg-${t}-500`}
+                                    />
                                     {t.charAt(0).toUpperCase() + t.slice(1)}
                                   </button>
                                 ))}
