@@ -236,7 +236,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="p-4 sm:p-6 lg:p-8"
+              // className="p-4 sm:p-6 lg:p-8"
             >
               {children}
             </motion.div>

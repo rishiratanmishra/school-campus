@@ -12,6 +12,15 @@ const DashboardMenu = () => {
   const selected = dashboardMenuConfig.find(
     (group) => group.category === activeGroup
   );
+  const [showEsc, setShowEsc] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowEsc((prev) => !prev);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleItemClick = async (action?: () => void | Promise<void>) => {
     if (!action) return;
@@ -33,14 +42,13 @@ const DashboardMenu = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
+      if (!e.altKey) return;
 
       if (!activeGroup) {
         const group = dashboardMenuConfig.find(
           (g) => g.shortcut?.toLowerCase() === key
         );
-        if (group) {
-          handleGroupChange(group.category);
-        }
+        if (group) handleGroupChange(group.category);
       } else {
         if (key === 'escape') {
           handleGroupChange(null);
@@ -66,15 +74,17 @@ const DashboardMenu = () => {
             key={activeGroup}
             layout
             initial={
-              openedGroups.has(activeGroup) ? false : { opacity: 0, x: -20 } // Changed from scale/y to x translation
+              !openedGroups.has(activeGroup)
+                ? { opacity: 0, x: -20 }
+                : undefined
             }
-            animate={{ opacity: 1, x: 0 }} // Animate x position
-            exit={{ opacity: 0, x: -20 }} // Exit to the left
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             transition={{
               type: 'spring',
-              stiffness: 300,
-              damping: 25,
-              duration: 0.3,
+              stiffness: 250,
+              damping: 28,
+              duration: 0.4,
             }}
             className="flex gap-4 items-start w-full relative"
           >
@@ -93,20 +103,16 @@ const DashboardMenu = () => {
               {selected.icon}
             </motion.div>
 
-            <div className="overflow-x-auto w-full pb-3 hide-scrollbar">
+            <div className="overflow-x-auto hide-scrollbar w-full pr-32">
               <motion.div
                 key="submenu-items"
                 className="flex gap-3"
-                style={{ height: 'calc(100% - 80px)' }}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={{
-                  hidden: { opacity: 0, y: 10, scale: 0.95 },
+                  hidden: {},
                   visible: {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
                     transition: {
                       staggerChildren: 0.05,
                       delayChildren: 0.15,
@@ -118,21 +124,8 @@ const DashboardMenu = () => {
                   <motion.button
                     key={item.label}
                     variants={{
-                      hidden: {
-                        opacity: 0,
-                        y: 10,
-                        scale: 0.95,
-                      },
-                      visible: {
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: {
-                          type: 'spring',
-                          stiffness: 400,
-                          damping: 15,
-                        },
-                      },
+                      hidden: { opacity: 0, y: 10, scale: 0.95 },
+                      visible: { opacity: 1, y: 0, scale: 1 },
                     }}
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
@@ -146,66 +139,54 @@ const DashboardMenu = () => {
                       'max-sm:min-w-[120px] shrink-0'
                     )}
                   >
-                    <motion.span
-                      className="text-primary/90"
-                      initial={{ scale: 0.8, y: 5 }}
-                      animate={{ scale: 1, y: 0 }}
-                      transition={{ type: 'spring', delay: 0.1 + i * 0.03 }}
-                    >
-                      {item.icon}
-                    </motion.span>
+                    <span className="text-primary/90">{item.icon}</span>
                     <div className="flex flex-col items-start">
-                      <motion.span
-                        className="text-sm font-medium text-left"
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + i * 0.03 }}
-                      >
+                      <span className="text-sm font-medium text-left">
                         {item.label}
-                      </motion.span>
+                      </span>
                       {item.description && (
-                        <motion.span
-                          className="text-xs text-muted-foreground/80 text-left"
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 + i * 0.03 }}
-                        >
+                        <span className="text-xs text-muted-foreground/80 text-left">
                           {item.description}
-                        </motion.span>
+                        </span>
                       )}
                     </div>
                     {selected.itemShortcuts?.[i] && (
-                      <motion.span
-                        className="absolute bottom-1 right-1 text-[10px] text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.25 + i * 0.03 }}
-                      >
+                      <span className="absolute bottom-1 right-1 text-[10px] text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         {selected.itemShortcuts[i]}
-                      </motion.span>
+                      </span>
                     )}
                   </motion.button>
                 ))}
               </motion.div>
             </div>
 
-            <motion.button
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{
-                type: 'spring',
-                delay: 0.1,
-                stiffness: 400,
-                damping: 20,
-              }}
-              whileHover={{ scale: 1.03 }}
-              onClick={() => handleGroupChange(null)}
-              className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 sticky top-0"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="max-sm:hidden">Back</span>
-            </motion.button>
+            {/* Sticky Back Button */}
+            <div className="sticky top-3 right-3 z-20">
+              <motion.button
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                whileHover={{ scale: 1.03 }}
+                onClick={() => handleGroupChange(null)}
+                className="w-[70px] flex items-center gap-1 px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={showEsc ? 'esc' : 'back'}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.25 }}
+                    className="max-sm:hidden"
+                  >
+                    {showEsc ? 'ESC' : 'Back'}
+                  </motion.span>
+                </AnimatePresence>
+              </motion.button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

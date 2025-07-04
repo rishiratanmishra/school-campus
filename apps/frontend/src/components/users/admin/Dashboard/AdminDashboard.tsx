@@ -83,7 +83,7 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <div style={{ height: '200px', overflow:'hidden' }} className="flex flex-col">
+      <div style={{ position: 'sticky', top: 0, zIndex: 10 , height: '64px' }} >
         <DashboardMenu />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
