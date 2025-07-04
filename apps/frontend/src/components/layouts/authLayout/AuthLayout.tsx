@@ -15,14 +15,54 @@ import {
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import {
-  LOCAL_STORAGE_DARK_KEY,
-  LOCAL_STORAGE_THEME_KEY,
   themes,
 } from '../Themes/ThemeCampus';
+import { useAuth } from '@/components/helpers/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 interface AuthLayoutProps {
   children?: React.ReactNode;
 }
+
+// In-memory storage fallback for environments where localStorage isn't available
+class ThemeStorage {
+  private static instance: ThemeStorage;
+  private storage = new Map<string, string>();
+
+  static getInstance(): ThemeStorage {
+    if (!ThemeStorage.instance) {
+      ThemeStorage.instance = new ThemeStorage();
+    }
+    return ThemeStorage.instance;
+  }
+
+  getItem(key: string): string | null {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        return localStorage.getItem(key);
+      } catch (error) {
+        console.warn('localStorage not available, using memory storage');
+      }
+    }
+    return this.storage.get(key) || null;
+  }
+
+  setItem(key: string, value: string): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem(key, value);
+        return;
+      } catch (error) {
+        console.warn('localStorage not available, using memory storage');
+      }
+    }
+    this.storage.set(key, value);
+  }
+}
+
+const themeStorage = ThemeStorage.getInstance();
+const LOCAL_STORAGE_DARK_KEY = 'theme-dark-mode';
+const LOCAL_STORAGE_THEME_KEY = 'theme-selection';
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,35 +72,100 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
+  const router = useRouter();
 
-  // Load from localStorage before render
+  // Authentication check
   useEffect(() => {
-    const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
-    const savedDark = localStorage.getItem(LOCAL_STORAGE_DARK_KEY);
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
-    if (savedTheme) setTheme(savedTheme);
-    if (savedDark) setIsDarkMode(savedDark === 'true');
+  // Load theme settings on mount
+  useEffect(() => {
+    const savedTheme = themeStorage.getItem(LOCAL_STORAGE_THEME_KEY);
+    const savedDark = themeStorage.getItem(LOCAL_STORAGE_DARK_KEY);
+
+    if (savedTheme && themes.includes(savedTheme)) {
+      setTheme(savedTheme);
+    }
+    if (savedDark) {
+      setIsDarkMode(savedDark === 'true');
+    }
     setLoaded(true);
   }, []);
 
-  // Apply theme + dark mode classes & store in localStorage
+  // Apply theme classes and save to storage
   useEffect(() => {
     if (!loaded) return;
 
     const root = document.documentElement;
+    
+    // Remove all theme classes
     themes.forEach((t) => root.classList.remove(`theme-${t}`));
+    
+    // Add current theme class
     root.classList.add(`theme-${theme}`);
+    
+    // Toggle dark mode
     root.classList.toggle('dark', isDarkMode);
 
-    localStorage.setItem(LOCAL_STORAGE_THEME_KEY, theme);
-    localStorage.setItem(LOCAL_STORAGE_DARK_KEY, String(isDarkMode));
+    // Save to storage
+    themeStorage.setItem(LOCAL_STORAGE_THEME_KEY, theme);
+    themeStorage.setItem(LOCAL_STORAGE_DARK_KEY, String(isDarkMode));
   }, [theme, isDarkMode, loaded]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setDropdownOpen(false);
+        setNotificationOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const toggleDarkMode = useCallback(() => {
     setIsDarkMode((prev) => !prev);
   }, []);
 
-  if (!loaded) return null;
+  const handleLogout = useCallback(async () => {
+    await logout();
+    router.push('/login');
+  }, [logout, router]);
+
+  const handleThemeChange = useCallback((newTheme: string) => {
+    setTheme(newTheme);
+    setThemeMenuOpen(false);
+  }, []);
+
+  // Don't render until theme is loaded
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show loading state while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -90,7 +195,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               </div>
 
               <div className="flex items-center space-x-2">
-                <div className="relative">
+                {/* Notifications */}
+                <div className="relative" data-dropdown>
                   <button
                     onClick={() => setNotificationOpen(!notificationOpen)}
                     className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative"
@@ -121,10 +227,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                               className="p-3 hover:bg-muted/50 rounded-lg cursor-pointer"
                             >
                               <div className="text-sm font-medium">
-                                Notification {item}
+                                New assignment posted
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                This is a sample notification
+                                Math homework due tomorrow
                               </div>
                             </div>
                           ))}
@@ -137,6 +243,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   </AnimatePresence>
                 </div>
 
+                {/* Dark mode toggle */}
                 <button
                   onClick={toggleDarkMode}
                   className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -154,7 +261,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   </motion.div>
                 </button>
 
-                <div className="relative">
+                {/* User profile dropdown */}
+                <div className="relative" data-dropdown>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex items-center space-x-2 p-1 rounded-lg hover:bg-muted transition-colors"
@@ -162,7 +270,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   >
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                       <span className="text-xs font-medium text-primary-foreground">
-                        JD
+                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
                   </button>
@@ -175,12 +283,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <div className="p-4 border-b border-border/50">
-                          <div className="text-sm font-medium">Rishi Ratan Mishra</div>
+                          <div className="text-sm font-medium">
+                            {user?.name || 'User'}
+                          </div>
                           <div className="text-xs text-muted-foreground">
-                            rishiratanmishra2@gmail.com
+                            {user?.email || 'user@example.com'}
                           </div>
                         </div>
 
@@ -203,34 +312,37 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                               <div className="h-4 w-4 mr-3 rounded-full bg-primary" />
                               Themes
                             </div>
-                            {themeMenuOpen ? (
+                            <motion.div
+                              animate={{ rotate: themeMenuOpen ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
                               <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
+                            </motion.div>
                           </button>
 
                           <AnimatePresence>
                             {themeMenuOpen && (
                               <motion.div
-                                initial={{ height: 0 }}
-                                animate={{ height: 'auto' }}
-                                exit={{ height: 0 }}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                                 className="bg-muted/20 overflow-hidden"
                               >
                                 {themes.map((t) => (
                                   <button
                                     key={t}
-                                    onClick={() => setTheme(t)}
+                                    onClick={() => handleThemeChange(t)}
                                     className={`w-full flex items-center px-8 py-2 text-left text-sm hover:bg-muted/30 transition-colors ${
                                       theme === t
-                                        ? 'font-medium text-primary'
+                                        ? 'font-medium text-primary bg-muted/20'
                                         : ''
                                     }`}
                                   >
                                     <div
-                                      className={`h-3 w-3 mr-2 rounded-full bg-${t}-500`}
+                                      className={`h-3 w-3 mr-2 rounded-full ${
+                                        theme === t ? 'bg-primary' : 'bg-muted-foreground'
+                                      }`}
                                     />
                                     {t.charAt(0).toUpperCase() + t.slice(1)}
                                   </button>
@@ -241,7 +353,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         </div>
 
                         <div className="border-t border-border/50">
-                          <button className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive"
+                          >
                             <LogOut className="h-4 w-4 mr-3" />
                             Sign Out
                           </button>
@@ -259,7 +374,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              // className="p-4 sm:p-6 lg:p-8"
+              className="h-full"
             >
               {children}
             </motion.div>

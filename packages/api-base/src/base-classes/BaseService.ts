@@ -49,13 +49,21 @@ export class BaseService<T> {
   /**
    * Create a new document
    */
-  async create(data: Partial<T>): Promise<T> {
-    try {
-      const document = await this.model.create(data);
-      return document;
-    } catch (error) {
-      throw error;
+ async create(data: Partial<T>, user?: any): Promise<T> {
+    if (user) {
+      (data as any).createdBy = {
+        _id: user._id,
+        name: user.name || '',
+      };
+      if (user.organisation) {
+        (data as any).organisation = {
+          _id: user.organisation._id,
+          name: user.organisation.name || '',
+        };
+      }
     }
+
+    return await this.model.create(data);
   }
 
   /**
@@ -198,17 +206,24 @@ export class BaseService<T> {
   /**
    * Update a document by ID
    */
-  async updateById(_id: string, updateData: Partial<T>): Promise<T | null> {
-    try {
-      const document = await this.model.findByIdAndUpdate(
-        _id,
-        updateData,
-        { new: true, runValidators: true }
-      );
-      return document;
-    } catch (error) {
-      throw error;
+   async updateById(_id: string, updateData: Partial<T>, user?: any): Promise<T | null> {
+    if (user) {
+      (updateData as any).updatedBy = {
+        _id: user._id,
+        name: user.name || '',
+      };
+      if (user.organisation) {
+        (updateData as any).organisation = {
+          _id: user.organisation._id,
+          name: user.organisation.name || '',
+        };
+      }
     }
+
+    return await this.model.findByIdAndUpdate(_id, updateData, {
+      new: true,
+      runValidators: true,
+    });
   }
 
   /**

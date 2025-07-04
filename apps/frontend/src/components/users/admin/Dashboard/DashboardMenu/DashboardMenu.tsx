@@ -42,6 +42,11 @@ const DashboardMenu = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
+      if (key === 'escape') {
+        if (activeGroup) {
+          handleGroupChange(null);
+        }
+      }
       if (!e.altKey) return;
 
       if (!activeGroup) {
@@ -67,7 +72,7 @@ const DashboardMenu = () => {
   }, [activeGroup, selected]);
 
   return (
-    <div className="relative w-full h-full flex items-start px-4 py-3 overflow-hidden">
+    <div className="relative w-full h-full flex items-center px-4 py-3 overflow-hidden">
       <AnimatePresence mode="popLayout">
         {activeGroup && selected && (
           <motion.div

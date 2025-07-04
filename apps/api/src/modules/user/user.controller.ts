@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@api-base/base-classes/BaseController';
-import { IUser, UserRole } from './user.model';
+import { IUser, UserModel, UserRole } from './user.model';
 import { UserService } from './user.service';
 import { ApiResponse } from '@api-base/base-classes/response';
 import { ServiceOptions } from '@api-base/base-classes/BaseService';
+import bcrypt from 'bcrypt';
+import { DocumentType } from '@typegoose/typegoose';
+import { signJwt } from '@src/auth/jwt';
+import crypto from 'crypto';
 
 export class UserController extends BaseController<IUser> {
   private userService: UserService;
@@ -15,33 +19,202 @@ export class UserController extends BaseController<IUser> {
   }
 
   /**
+   * Generate refresh token and its hash
+   */
+  private generateRefreshToken(): { refreshToken: string; refreshTokenHash: string } {
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    return { refreshToken, refreshTokenHash };
+  }
+
+  /**
    * Create new user
    */
   createUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, email, password, role } = req.body;
+      const { email, password, name } = req.body;
 
-      // Validation
-      if (!name || !email || !password) {
-        ApiResponse.error(res, 'Name, email, and password are required', 400);
+      const existingUser = await UserModel.findOne({ email });
+      if (existingUser) {
+        res
+          .status(409)
+          .json({ success: false, message: 'User already exists' });
         return;
       }
 
-      // Check if email already exists
-      const emailExists = await this.userService.emailExists(email);
-      if (emailExists) {
-        ApiResponse.error(res, 'Email already exists', 400);
-        return;
-      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Generate refresh token
+      const { refreshToken, refreshTokenHash } = this.generateRefreshToken();
 
-      // Create user
-      const userData = { name, email, password, role: role || UserRole.USER };
-      const user = await this.userService.createUser(userData);
+      const user = await UserModel.create({
+        email,
+        password: hashedPassword,
+        name,
+        refreshTokenHash, // Store the refresh token hash
+      });
 
-      ApiResponse.success(res, 'User created successfully', user, 201);
+      const userDoc = user as DocumentType<IUser>;
+      
+      // Generate access token
+      const accessToken = signJwt({ _id: userDoc._id.toString(), role: userDoc.role });
+
+      const { password: _, refreshTokenHash: __, ...userWithoutPassword } = userDoc.toObject();
+      
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: userWithoutPassword,
+        tokens: {
+          accessToken,
+          refreshToken, // Send refresh token to client
+        },
+      });
     } catch (error: any) {
       console.error('Create user error:', error);
-      ApiResponse.error(res, 'Failed to create user', 500, error.message);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to create user',
+      });
+    }
+  };
+
+  /**
+   * Verify login
+   */
+  verifyLogin = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        res
+          .status(401)
+          .json({ success: false, message: 'Invalid credentials' });
+        return;
+      }
+
+      const userDoc = user as DocumentType<IUser>;
+      const isMatch = await bcrypt.compare(password, userDoc.password);
+      if (!isMatch) {
+        res
+          .status(401)
+          .json({ success: false, message: 'Invalid credentials' });
+        return;
+      }
+
+      // Generate new refresh token on login
+      const { refreshToken, refreshTokenHash } = this.generateRefreshToken();
+      
+      // Update user with new refresh token hash
+      await UserModel.findByIdAndUpdate(userDoc._id, { refreshTokenHash });
+
+      // Generate access token
+      const accessToken = signJwt({ _id: userDoc._id.toString(), role: userDoc.role });
+
+      const { password: _, refreshTokenHash: __, ...userWithoutPassword } = userDoc.toObject();
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: userWithoutPassword,
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Login failed',
+      });
+    }
+  };
+
+  /**
+   * Refresh access token using refresh token
+   */
+  refreshToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        res.status(401).json({ success: false, message: 'Refresh token required' });
+        return;
+      }
+
+      // Hash the provided refresh token
+      const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+      // Find user with matching refresh token hash
+      const user = await UserModel.findOne({ refreshTokenHash: hashedRefreshToken });
+      if (!user) {
+        res.status(401).json({ success: false, message: 'Invalid refresh token' });
+        return;
+      }
+
+      // Generate new tokens
+      const { refreshToken: newRefreshToken, refreshTokenHash: newRefreshTokenHash } = this.generateRefreshToken();
+      const newAccessToken = signJwt({ _id: user._id.toString(), role: user.role });
+
+      // Update user with new refresh token hash
+      await UserModel.findByIdAndUpdate(user._id, { refreshTokenHash: newRefreshTokenHash });
+
+      res.status(200).json({
+        success: true,
+        message: 'Token refreshed successfully',
+        tokens: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        },
+      });
+    } catch (error: any) {
+      console.error('Refresh token error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Token refresh failed',
+      });
+    }
+  };
+
+  /**
+   * Logout user (invalidate refresh token)
+   */
+  logout = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        res.status(400).json({ success: false, message: 'Refresh token required' });
+        return;
+      }
+
+      // Hash the provided refresh token
+      const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+      // Find and clear the refresh token
+      const user = await UserModel.findOneAndUpdate(
+        { refreshTokenHash: hashedRefreshToken },
+        { $unset: { refreshTokenHash: 1 } },
+        { new: true }
+      );
+
+      if (!user) {
+        res.status(401).json({ success: false, message: 'Invalid refresh token' });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Logout failed',
+      });
     }
   };
 
@@ -56,7 +229,7 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'Users retrieved successfully', {
         users: result.data,
         pagination: result.pagination,
-        filters: result.filters
+        filters: result.filters,
       });
     } catch (error: any) {
       console.error('Get all users error:', error);
@@ -69,13 +242,13 @@ export class UserController extends BaseController<IUser> {
    */
   getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { _id } = req.body ;
+      const { _id } = req.body;
       console.log('Get user by ID:', req.body);
       if (!_id || typeof _id !== 'string') {
         ApiResponse.error(res, 'User ID is required', 400);
         return;
       }
-      const user = await this.userService.findById(_id, ['password']);
+      const user = await this.userService.findById(_id, ['password', 'refreshTokenHash']);
       if (!user) {
         ApiResponse.error(res, 'User not found', 404);
         return;
@@ -165,11 +338,16 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'Active users retrieved successfully', {
         users: result.data,
         pagination: result.pagination,
-        filters: result.filters
+        filters: result.filters,
       });
     } catch (error: any) {
       console.error('Get active users error:', error);
-      ApiResponse.error(res, 'Failed to retrieve active users', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to retrieve active users',
+        500,
+        error.message
+      );
     }
   };
 
@@ -184,11 +362,16 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'Admin users retrieved successfully', {
         users: result.data,
         pagination: result.pagination,
-        filters: result.filters
+        filters: result.filters,
       });
     } catch (error: any) {
       console.error('Get admin users error:', error);
-      ApiResponse.error(res, 'Failed to retrieve admin users', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to retrieve admin users',
+        500,
+        error.message
+      );
     }
   };
 
@@ -198,23 +381,31 @@ export class UserController extends BaseController<IUser> {
   getUsersByRole = async (req: Request, res: Response): Promise<void> => {
     try {
       const { role } = req.params;
-      
+
       if (!Object.values(UserRole).includes(role as UserRole)) {
         ApiResponse.error(res, 'Invalid role', 400);
         return;
       }
 
       const options: ServiceOptions = this.buildServiceOptions(req);
-      const result = await this.userService.getUsersByRole(role as UserRole, options);
+      const result = await this.userService.getUsersByRole(
+        role as UserRole,
+        options
+      );
 
       ApiResponse.success(res, `${role} users retrieved successfully`, {
         users: result.data,
         pagination: result.pagination,
-        filters: result.filters
+        filters: result.filters,
       });
     } catch (error: any) {
       console.error('Get users by role error:', error);
-      ApiResponse.error(res, 'Failed to retrieve users by role', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to retrieve users by role',
+        500,
+        error.message
+      );
     }
   };
 
@@ -224,19 +415,22 @@ export class UserController extends BaseController<IUser> {
   searchUsers = async (req: Request, res: Response): Promise<void> => {
     try {
       const { searchTerm } = req.query;
-      
+
       if (!searchTerm) {
         ApiResponse.error(res, 'Search term is required', 400);
         return;
       }
 
       const options: ServiceOptions = this.buildServiceOptions(req);
-      const result = await this.userService.searchUsers(searchTerm as string, options);
+      const result = await this.userService.searchUsers(
+        searchTerm as string,
+        options
+      );
 
       ApiResponse.success(res, 'User search completed successfully', {
         users: result.data,
         pagination: result.pagination,
-        filters: result.filters
+        filters: result.filters,
       });
     } catch (error: any) {
       console.error('Search users error:', error);
@@ -265,7 +459,12 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'User status updated successfully', user);
     } catch (error: any) {
       console.error('Toggle user status error:', error);
-      ApiResponse.error(res, 'Failed to toggle user status', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to toggle user status',
+        500,
+        error.message
+      );
     }
   };
 
@@ -314,7 +513,11 @@ export class UserController extends BaseController<IUser> {
       }
 
       if (!newPassword || newPassword.length < 6) {
-        ApiResponse.error(res, 'New password must be at least 6 characters long', 400);
+        ApiResponse.error(
+          res,
+          'New password must be at least 6 characters long',
+          400
+        );
         return;
       }
 
@@ -340,7 +543,12 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'User statistics retrieved successfully', stats);
     } catch (error: any) {
       console.error('Get user stats error:', error);
-      ApiResponse.error(res, 'Failed to retrieve user statistics', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to retrieve user statistics',
+        500,
+        error.message
+      );
     }
   };
 
@@ -357,10 +565,10 @@ export class UserController extends BaseController<IUser> {
       }
 
       const result = await this.userService.bulkDeactivateUsers(userIds);
-      
+
       ApiResponse.success(res, 'Bulk deactivation completed', {
         matchedCount: result.matchedCount,
-        modifiedCount: result.modifiedCount
+        modifiedCount: result.modifiedCount,
       });
     } catch (error: any) {
       console.error('Bulk deactivate users error:', error);
@@ -369,35 +577,12 @@ export class UserController extends BaseController<IUser> {
   };
 
   /**
-   * Verify user login
-   */
-  verifyLogin = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        ApiResponse.error(res, 'Email and password are required', 400);
-        return;
-      }
-
-      const result = await this.userService.verifyPassword(email, password);
-      
-      if (!result.isValid) {
-        ApiResponse.error(res, 'Invalid email or password', 401);
-        return;
-      }
-
-      ApiResponse.success(res, 'Login successful', result.user);
-    } catch (error: any) {
-      console.error('Verify login error:', error);
-      ApiResponse.error(res, 'Login failed', 500, error.message);
-    }
-  };
-
-  /**
    * Check email availability
    */
-  checkEmailAvailability = async (req: Request, res: Response): Promise<void> => {
+  checkEmailAvailability = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
       const { email } = req.query;
       const { excludeUserId } = req.query;
@@ -408,17 +593,78 @@ export class UserController extends BaseController<IUser> {
       }
 
       const exists = await this.userService.emailExists(
-        email as string, 
+        email as string,
         excludeUserId as string
       );
 
       ApiResponse.success(res, 'Email availability checked', {
         email,
-        available: !exists
+        available: !exists,
       });
     } catch (error: any) {
       console.error('Check email availability error:', error);
-      ApiResponse.error(res, 'Failed to check email availability', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to check email availability',
+        500,
+        error.message
+      );
+    }
+  };
+
+  /**
+   * Invalidate all refresh tokens for a user (useful for security)
+   */
+  invalidateAllTokens = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { _id } = req.params;
+
+      if (!_id || typeof _id !== 'string') {
+        ApiResponse.error(res, 'User ID is required', 400);
+        return;
+      }
+
+      const user = await UserModel.findByIdAndUpdate(
+        _id,
+        { $unset: { refreshTokenHash: 1 } },
+        { new: true }
+      );
+
+      if (!user) {
+        ApiResponse.error(res, 'User not found', 404);
+        return;
+      }
+
+      ApiResponse.success(res, 'All tokens invalidated successfully');
+    } catch (error: any) {
+      console.error('Invalidate all tokens error:', error);
+      ApiResponse.error(res, 'Failed to invalidate tokens', 500, error.message);
+    }
+  };
+
+  /**
+   * Get current user profile (using JWT token)
+   */
+  getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Assuming you have middleware that sets req.user from JWT
+      const userId = (req as any).user?._id;
+
+      if (!userId) {
+        ApiResponse.error(res, 'User not authenticated', 401);
+        return;
+      }
+
+      const user = await this.userService.findById(userId, ['password', 'refreshTokenHash']);
+      if (!user) {
+        ApiResponse.error(res, 'User not found', 404);
+        return;
+      }
+
+      ApiResponse.success(res, 'Current user retrieved successfully', user);
+    } catch (error: any) {
+      console.error('Get current user error:', error);
+      ApiResponse.error(res, 'Failed to retrieve current user', 500, error.message);
     }
   };
 }

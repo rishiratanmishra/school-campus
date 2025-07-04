@@ -5,6 +5,7 @@ export const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_BASE_URL || 'http://loca
 
 export const QUERY_KEYS = {
   USERS: 'users',
+  CURRENT_USER: 'currentUser',
   ORGANISATION: 'organisation',
   STUDENTS: 'students',
   TEACHERS: 'teachers',

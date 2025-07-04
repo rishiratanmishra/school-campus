@@ -1,6 +1,6 @@
 import { modelOptions, prop } from '@typegoose/typegoose';
 
-export class INameModel {
+export class NameModel {
   @prop({ required: true, trim: true, type: String })
   first!: string;
 
@@ -22,7 +22,7 @@ export class IGeoLocation {
 }
 
 @modelOptions({ schemaOptions: { _id: false } })
-export class IAddress {
+export class Address {
   @prop({ type: String, trim: true })
   addressLine1?: string;
 

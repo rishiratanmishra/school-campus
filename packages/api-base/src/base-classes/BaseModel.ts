@@ -1,18 +1,18 @@
 import { prop, mongoose } from '@typegoose/typegoose';
 
-class RelUser {
-  @prop()
+export class RelUser {
+  @prop({ type: String }) 
   name?: string;
 
-  @prop()
+  @prop({ required: true, type: mongoose.Types.ObjectId }) 
   _id!: mongoose.Types.ObjectId;
 }
 
-class RelOrganisation {
-  @prop()
+export class RelOrganisation {
+  @prop({ type: String }) 
   name?: string;
 
-  @prop()
+  @prop({ required: true, type: mongoose.Types.ObjectId })
   _id!: mongoose.Types.ObjectId;
 }
 

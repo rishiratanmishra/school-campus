@@ -1,4 +1,4 @@
-import { IAddress, INameModel } from '@api-base/common-schemas';
+import { Address, NameModel } from '@api-base/common-schemas';
 import {
   getModelForClass,
   modelOptions,
@@ -7,6 +7,7 @@ import {
 } from '@typegoose/typegoose';
 import { IUser } from '../user/user.model';
 import { IOrganisation } from '../organisation/organisation.model';
+import { BaseModel } from '@api-base/base-classes/BaseModel';
 
 @modelOptions({
   schemaOptions: {
@@ -14,12 +15,12 @@ import { IOrganisation } from '../organisation/organisation.model';
     collection: 'teachers',
   },
 })
-export class ITeacher {
-  @prop({ required: true, type: () => INameModel })
-  name!: INameModel;
+export class ITeacher extends BaseModel {
+  @prop({ required: true, type: () => NameModel })
+  name!: NameModel;
 
-  @prop({ required: false, type: () => IAddress })
-  address!: IAddress;
+  @prop({ required: false, type: () => Address })
+  address!: Address;
 
   @prop({ required: false, unique: true, lowercase: true, type: String })
   email!: string;

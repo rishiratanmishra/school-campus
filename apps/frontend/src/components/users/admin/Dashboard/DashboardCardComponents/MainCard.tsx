@@ -1,12 +1,19 @@
-import React from 'react'
-import {Card,CardHeader,CardTitle,CardDescription,CardContent,CardFooter,} from '@/components/ui/card'
-import { LucideIcon } from 'lucide-react'
+import React from 'react';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { LucideIcon } from 'lucide-react';
 
 interface MainCardProps {
-  title: string
-  description: string
-  footer?: boolean
-  children?: React.ReactNode
+  title: string;
+  description: string;
+  footer?: boolean;
+  children?: React.ReactNode;
 }
 
 export const MainCard: React.FC<MainCardProps> = ({
@@ -24,26 +31,31 @@ export const MainCard: React.FC<MainCardProps> = ({
       {children && <CardContent>{children}</CardContent>}
       {footer && (
         <CardFooter className="pt-2">
-          <p className="text-sm text-muted-foreground">Last updated 5 mins ago</p>
+          <p className="text-sm text-muted-foreground">
+            Last updated 5 mins ago
+          </p>
         </CardFooter>
       )}
     </Card>
-  )
-}
+  );
+};
 
 interface QuickActionItem {
-  label: string
-  icon: LucideIcon
-  variant?: 'default' | 'secondary'
-  onClick?: () => void
+  label: string;
+  icon: LucideIcon;
+  variant?: 'default' | 'secondary';
+  onClick?: () => void;
 }
 
 interface QuickActionsCardProps {
-  title: string
-  actions: QuickActionItem[]
+  title: string;
+  actions: QuickActionItem[];
 }
 
-export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({ title, actions }) => {
+export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
+  title,
+  actions,
+}) => {
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
@@ -55,9 +67,11 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({ title, actio
             key={idx}
             onClick={action.onClick}
             className={`w-full flex items-center px-4 py-2 rounded-md text-sm font-medium 
-              ${action.variant === 'default'
-                ? 'bg-primary text-white hover:bg-primary/90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'} gap-2`}
+              ${
+                action.variant === 'default'
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'text-muted-foreground hover:text-foreground'
+              } gap-2`}
           >
             <action.icon size={18} />
             {action.label}
@@ -65,5 +79,5 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({ title, actio
         ))}
       </CardContent>
     </Card>
-  )
-}
+  );
+};

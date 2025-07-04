@@ -2,6 +2,17 @@ import { Request, Response } from 'express';
 import { BaseService, ServiceOptions } from './BaseService';
 import { ApiResponse } from './response';
 
+interface AuthenticatedRequest extends Request {
+  user?: {
+    _id: string;
+    name?: string;
+    organisation?: {
+      _id: string;
+      name?: string;
+    };
+  };
+}
+
 export class BaseController<T> {
   protected service: BaseService<T>;
 
@@ -12,7 +23,7 @@ export class BaseController<T> {
   /**
    * Create new record
    */
-  handleCreate = async (req: Request, res: Response): Promise<void> => {
+  handleCreate = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const data = await this.service.create(req.body);
       ApiResponse.success(res, 'Created successfully', data, 201);
@@ -74,7 +85,7 @@ export class BaseController<T> {
   /**
    * Update record by ID
    */
-  handleUpdate = async (req: Request, res: Response): Promise<void> => {
+  handleUpdate = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const _id = req.params._id;
       if (!_id) {
