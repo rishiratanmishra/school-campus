@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { toast } from 'sonner';
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -137,7 +138,7 @@ export async function callApi<T>({
     const message = error?.response?.data?.message || error.message || 'Unknown error';
 
     if (showToastOnError) {
-      // toast.error(message);
+      toast.error(message);
     }
 
     throw new Error(message);

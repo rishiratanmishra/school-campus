@@ -1,3 +1,4 @@
+//  generating initials
 export const getInitials = (name: string): string => {
   const trimmed = name.trim();
   if (!trimmed) return 'U';
@@ -17,13 +18,14 @@ export const getInitials = (name: string): string => {
   return initials || 'U';
 };
 
-
-
-type NameObject = {
-  first?: string;
-  middle?: string;
-  last?: string;
-} | string;
+// converting name objects to strings.
+type NameObject =
+  | {
+      first?: string;
+      middle?: string;
+      last?: string;
+    }
+  | string;
 
 export const convertObjectNameToString = (name: NameObject): string => {
   if (typeof name === 'string') {
@@ -37,4 +39,14 @@ export const convertObjectNameToString = (name: NameObject): string => {
     .filter((part) => !!part);
 
   return parts.join(' ');
+};
+
+// generate slug from name
+export const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') 
+    .replace(/[\s_-]+/g, '-') 
+    .replace(/^-+|-+$/g, ''); 
 };

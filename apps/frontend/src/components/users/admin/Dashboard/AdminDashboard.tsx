@@ -29,8 +29,8 @@ const drawerConfig: Record<
   }
 > = {
   organisation: {
-    title: 'Add New School',
-    description: 'Fill out the form below with the school details.',
+    title: 'Add New Organisation',
+    description: 'Fill out the form below with the organisation details.',
     icon: <School className="h-5 w-5 text-primary" />,
     content: (onClose) => <AddOrganisationForm onFormSubmit={onClose} />,
   },
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
 
   const quickActions = [
     {
-      label: 'Add New School',
+      label: 'Add New Organisation',
       icon: School,
       variant: 'default' as const,
       onClick: () => openDrawer('organisation'),
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
         <div className="col-span-2 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <MainCard
-              title="No of Schools"
+              title="No of Organisation"
               description={organisationList?.pagination?.totalRecords || 0}
             />
             <MainCard title="No of Students" description="300" />

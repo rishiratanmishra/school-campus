@@ -46,10 +46,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
   // Authentication check
   useEffect(() => {
-    if (isClient && isInitialized && !isAuthenticated) {
+    if (isClient && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router, isClient, isInitialized]);
+  }, [isAuthenticated, router, isClient]);
 
   // Load theme settings on mount
   useEffect(() => {
