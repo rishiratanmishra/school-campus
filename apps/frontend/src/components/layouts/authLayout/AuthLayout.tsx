@@ -2,17 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Bell,
-  Menu,
-  Sun,
-  Moon,
-  ChevronRight,
-  ChevronDown,
-  User,
-  Settings,
-  LogOut,
-} from 'lucide-react';
+import { Bell, Menu, Sun, Moon, ChevronRight } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { themes } from '../Themes/ThemeCampus';
 import { useRouter } from 'next/navigation';
@@ -24,56 +14,17 @@ import {
   clearAuth,
 } from '@/store/auth/AuthenticationSlice';
 import { RootState, AppDispatch } from '@/store';
-import {  convertObjectNameToString, getInitials } from '@/components/helpers/helpers';
+import { convertObjectNameToString, getInitials } from '@/components/helpers/helpers';
+import { themeStorage, LOCAL_STORAGE_DARK_KEY, LOCAL_STORAGE_THEME_KEY } from '../Themes/ThemeStorage';
+import { UserDropdown } from './UserDropdown';
 
 interface AuthLayoutProps {
   children?: React.ReactNode;
 }
 
-// In-memory storage fallback for environments where localStorage isn't available
-class ThemeStorage {
-  private static instance: ThemeStorage;
-  private storage = new Map<string, string>();
-
-  static getInstance(): ThemeStorage {
-    if (!ThemeStorage.instance) {
-      ThemeStorage.instance = new ThemeStorage();
-    }
-    return ThemeStorage.instance;
-  }
-
-  getItem(key: string): string | null {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        return localStorage.getItem(key);
-      } catch (error) {
-        console.warn('localStorage not available, using memory storage');
-      }
-    }
-    return this.storage.get(key) || null;
-  }
-
-  setItem(key: string, value: string): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        localStorage.setItem(key, value);
-        return;
-      } catch (error) {
-        console.warn('localStorage not available, using memory storage');
-      }
-    }
-    this.storage.set(key, value);
-  }
-}
-
-const themeStorage = ThemeStorage.getInstance();
-const LOCAL_STORAGE_DARK_KEY = 'theme-dark-mode';
-const LOCAL_STORAGE_THEME_KEY = 'theme-selection';
-
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [theme, setTheme] = useState<string>('default');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -145,7 +96,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       if (!target.closest('[data-dropdown]')) {
         setDropdownOpen(false);
         setNotificationOpen(false);
-        setThemeMenuOpen(false);
       }
     };
 
@@ -161,7 +111,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       if (event.key === 'Escape') {
         setDropdownOpen(false);
         setNotificationOpen(false);
-        setThemeMenuOpen(false);
       }
     };
 
@@ -174,10 +123,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    // Clear auth state from Redux
     dispatch(clearAuth());
 
-    // Clear any additional storage if needed
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         localStorage.removeItem('auth-tokens');
@@ -187,41 +134,19 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       }
     }
 
-    // Redirect to login
     router.push('/login');
   }, [dispatch, router]);
 
   const handleThemeChange = useCallback((newTheme: string) => {
     setTheme(newTheme);
-    setThemeMenuOpen(false);
   }, []);
 
-  // Prevent hydration issues by not rendering until client is ready
-  if (!isClient) {
-    return null;
-  }
-
-  // Don't render until theme is loaded
-  if (!loaded) {
+  if (!isClient || !loaded || !isInitialized || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  // Show loading state while authentication is being initialized
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (
@@ -336,114 +261,21 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                   >
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                       <span className="text-xs font-medium text-primary-foreground">
-  {getInitials(convertObjectNameToString(user?.name))}
+                        {getInitials(convertObjectNameToString(user?.name))}
                       </span>
                     </div>
                   </button>
 
-                  <AnimatePresence>
-                    {dropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="p-4 border-b border-border/50">
-                          <div className="text-sm font-medium">
-                          
-                                                    {convertObjectNameToString(user?.name) || 'U'}
-
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {user?.email || 'user@example.com'}
-                          </div>
-                        </div>
-
-                        <button className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors">
-                          <User className="h-4 w-4 mr-3" />
-                          Profile
-                        </button>
-                        <button className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors">
-                          <Settings className="h-4 w-4 mr-3" />
-                          Settings
-                        </button>
-
-                        {/* Theme submenu */}
-                        <div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setThemeMenuOpen(!themeMenuOpen);
-                            }}
-                            className="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center">
-                              <div className="h-4 w-4 mr-3 rounded-full bg-primary" />
-                              Themes
-                            </div>
-                            <motion.div
-                              animate={{ rotate: themeMenuOpen ? 180 : 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </motion.div>
-                          </button>
-
-                          <AnimatePresence>
-                            {themeMenuOpen && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="bg-muted/20 overflow-hidden"
-                              >
-                                {themes.map((t) => (
-                                  <button
-                                    key={t}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleThemeChange(t);
-                                    }}
-                                    className={`w-full flex items-center px-8 py-2 text-left text-sm hover:bg-muted/30 transition-colors ${
-                                      theme === t
-                                        ? 'font-medium text-primary bg-muted/20'
-                                        : ''
-                                    }`}
-                                  >
-                                    <div
-                                      className={`h-3 w-3 mr-2 rounded-full ${
-                                        theme === t
-                                          ? 'bg-primary'
-                                          : 'bg-muted-foreground'
-                                      }`}
-                                    />
-                                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                                  </button>
-                                ))}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        <div className="border-t border-border/50">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLogout();
-                            }}
-                            className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive"
-                          >
-                            <LogOut className="h-4 w-4 mr-3" />
-                            Sign Out
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <UserDropdown
+                    isOpen={dropdownOpen}
+                    onClose={() => setDropdownOpen(false)}
+                    theme={theme}
+                    isDarkMode={isDarkMode}
+                    toggleDarkMode={toggleDarkMode}
+                    handleThemeChange={handleThemeChange}
+                    handleLogout={handleLogout}
+                    user={user}
+                  />
                 </div>
               </div>
             </div>
