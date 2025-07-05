@@ -4,7 +4,12 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { sidebarItems } from '../NavigationConfig';
-import { getInitials } from '@/components/helpers/helpers';
+import {
+  convertObjectNameToString,
+  getInitials,
+} from '@/components/helpers/helpers';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/store/auth/AuthenticationSlice';
 const dashboardName = 'School Campus';
 
 interface SidebarProps {
@@ -26,6 +31,8 @@ const overlayVariants = {
 };
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const user = useSelector(selectCurrentUser);
+
   return (
     <>
       {/* Overlay */}
@@ -110,10 +117,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  Rishi Ratan Mishra
+                  {convertObjectNameToString(user?.name) || 'U'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  rishiratanmishra2@gmail.com
+                  {user?.email || 'user@example.com'}
                 </p>
               </div>
             </div>

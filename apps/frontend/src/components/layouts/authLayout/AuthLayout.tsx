@@ -14,11 +14,17 @@ import {
   LogOut,
 } from 'lucide-react';
 import Sidebar from './Sidebar';
-import {
-  themes,
-} from '../Themes/ThemeCampus';
-import { useAuth } from '@/components/helpers/hooks/useAuth';
+import { themes } from '../Themes/ThemeCampus';
 import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectIsAuthenticated,
+  selectCurrentUser,
+  selectIsAuthInitialized,
+  clearAuth,
+} from '@/store/auth/AuthenticationSlice';
+import { RootState, AppDispatch } from '@/store';
+import {  convertObjectNameToString, getInitials } from '@/components/helpers/helpers';
 
 interface AuthLayoutProps {
   children?: React.ReactNode;
@@ -72,18 +78,32 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const { isAuthenticated, isLoading, user, logout } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  // Redux selectors
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+  const isInitialized = useSelector(selectIsAuthInitialized);
+  const dispatch = useDispatch<AppDispatch>();
+
   const router = useRouter();
+
+  // Ensure client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Authentication check
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isClient && isInitialized && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, router, isClient, isInitialized]);
 
   // Load theme settings on mount
   useEffect(() => {
+    if (!isClient) return;
+
     const savedTheme = themeStorage.getItem(LOCAL_STORAGE_THEME_KEY);
     const savedDark = themeStorage.getItem(LOCAL_STORAGE_DARK_KEY);
 
@@ -94,55 +114,92 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       setIsDarkMode(savedDark === 'true');
     }
     setLoaded(true);
-  }, []);
+  }, [isClient]);
 
   // Apply theme classes and save to storage
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !isClient) return;
 
     const root = document.documentElement;
-    
+
     // Remove all theme classes
     themes.forEach((t) => root.classList.remove(`theme-${t}`));
-    
+
     // Add current theme class
     root.classList.add(`theme-${theme}`);
-    
+
     // Toggle dark mode
     root.classList.toggle('dark', isDarkMode);
 
     // Save to storage
     themeStorage.setItem(LOCAL_STORAGE_THEME_KEY, theme);
     themeStorage.setItem(LOCAL_STORAGE_DARK_KEY, String(isDarkMode));
-  }, [theme, isDarkMode, loaded]);
+  }, [theme, isDarkMode, loaded, isClient]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
+    if (!isClient) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('[data-dropdown]')) {
         setDropdownOpen(false);
         setNotificationOpen(false);
+        setThemeMenuOpen(false);
       }
     };
 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  }, [isClient]);
+
+  // Handle escape key to close dropdowns
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDropdownOpen(false);
+        setNotificationOpen(false);
+        setThemeMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isClient]);
 
   const toggleDarkMode = useCallback(() => {
     setIsDarkMode((prev) => !prev);
   }, []);
 
   const handleLogout = useCallback(async () => {
-    await logout();
+    // Clear auth state from Redux
+    dispatch(clearAuth());
+
+    // Clear any additional storage if needed
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.removeItem('auth-tokens');
+        localStorage.removeItem('user-data');
+      } catch (error) {
+        console.warn('Failed to clear localStorage during logout');
+      }
+    }
+
+    // Redirect to login
     router.push('/login');
-  }, [logout, router]);
+  }, [dispatch, router]);
 
   const handleThemeChange = useCallback((newTheme: string) => {
     setTheme(newTheme);
     setThemeMenuOpen(false);
   }, []);
+
+  // Prevent hydration issues by not rendering until client is ready
+  if (!isClient) {
+    return null;
+  }
 
   // Don't render until theme is loaded
   if (!loaded) {
@@ -153,8 +210,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     );
   }
 
-  // Show loading state while authentication is being checked
-  if (isLoading) {
+  // Show loading state while authentication is being initialized
+  if (!isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -198,7 +255,11 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 {/* Notifications */}
                 <div className="relative" data-dropdown>
                   <button
-                    onClick={() => setNotificationOpen(!notificationOpen)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setNotificationOpen(!notificationOpen);
+                      setDropdownOpen(false);
+                    }}
                     className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors relative"
                     aria-label="Notifications"
                   >
@@ -216,6 +277,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-2 w-72 bg-card border border-border rounded-lg shadow-lg z-50 p-2"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <div className="p-2 text-sm font-medium text-center border-b border-border/50">
                           Notifications
@@ -264,13 +326,17 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 {/* User profile dropdown */}
                 <div className="relative" data-dropdown>
                   <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDropdownOpen(!dropdownOpen);
+                      setNotificationOpen(false);
+                    }}
                     className="flex items-center space-x-2 p-1 rounded-lg hover:bg-muted transition-colors"
                     aria-label="User profile"
                   >
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                       <span className="text-xs font-medium text-primary-foreground">
-                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+  {getInitials(convertObjectNameToString(user?.name))}
                       </span>
                     </div>
                   </button>
@@ -283,10 +349,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <div className="p-4 border-b border-border/50">
                           <div className="text-sm font-medium">
-                            {user?.name || 'User'}
+                          
+                                                    {convertObjectNameToString(user?.name) || 'U'}
+
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {user?.email || 'user@example.com'}
@@ -305,7 +374,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         {/* Theme submenu */}
                         <div>
                           <button
-                            onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setThemeMenuOpen(!themeMenuOpen);
+                            }}
                             className="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
                           >
                             <div className="flex items-center">
@@ -332,7 +404,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                                 {themes.map((t) => (
                                   <button
                                     key={t}
-                                    onClick={() => handleThemeChange(t)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleThemeChange(t);
+                                    }}
                                     className={`w-full flex items-center px-8 py-2 text-left text-sm hover:bg-muted/30 transition-colors ${
                                       theme === t
                                         ? 'font-medium text-primary bg-muted/20'
@@ -341,7 +416,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                                   >
                                     <div
                                       className={`h-3 w-3 mr-2 rounded-full ${
-                                        theme === t ? 'bg-primary' : 'bg-muted-foreground'
+                                        theme === t
+                                          ? 'bg-primary'
+                                          : 'bg-muted-foreground'
                                       }`}
                                     />
                                     {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -354,7 +431,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
                         <div className="border-t border-border/50">
                           <button
-                            onClick={handleLogout}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLogout();
+                            }}
                             className="w-full flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive"
                           >
                             <LogOut className="h-4 w-4 mr-3" />
