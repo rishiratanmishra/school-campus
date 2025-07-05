@@ -647,7 +647,6 @@ export class UserController extends BaseController<IUser> {
    */
   getCurrentUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      // Assuming you have middleware that sets req.user from JWT
       const userId = (req as any).user?._id;
 
       if (!userId) {
