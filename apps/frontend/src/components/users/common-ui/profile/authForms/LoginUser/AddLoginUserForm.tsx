@@ -26,18 +26,11 @@ const AddLoginUserForm = () => {
   ) => {
     try {
       const response = await loginUser.mutateAsync(values);
-
-      console.log('Login response:', response); // ✅ Debug log
-
-      // ✅ Extract user and token data correctly
-      const userData = response.data; // user object is in `data`
+      const userData = response.data;
       const tokenData = response.tokens || {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       };
-
-      console.log('User data:', userData);
-      console.log('Token data:', tokenData);
 
       if (userData) {
         dispatch(
@@ -52,15 +45,12 @@ const AddLoginUserForm = () => {
                 : undefined,
           })
         );
-
-        console.log('Login success dispatched to Redux');
       } else {
         console.warn('No user data found in response');
         toast.error('Login failed: No user data received');
         return;
       }
 
-      // Optional: Save tokens to localStorage
       if (typeof window !== 'undefined' && tokenData?.accessToken) {
         try {
           localStorage.setItem('auth-tokens', JSON.stringify(tokenData));
@@ -71,7 +61,6 @@ const AddLoginUserForm = () => {
 
       toast.success(response.message || 'Login successful');
 
-      // Wait briefly to ensure Redux is updated before routing
       setTimeout(() => {
         router.push('/admin/gg');
       }, 100);
