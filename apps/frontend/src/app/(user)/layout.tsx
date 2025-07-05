@@ -18,10 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <AuthLayout>{children}</AuthLayout>
-      </body>
-    </html>
+    <>
+      <AuthLayout>{children}</AuthLayout>
+    </>
   );
 }

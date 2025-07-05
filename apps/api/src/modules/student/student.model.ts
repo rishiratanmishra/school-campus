@@ -1,4 +1,4 @@
-import { INameModel } from '@api-base/common-schemas';
+import { NameModel } from '@api-base/common-schemas';
 import {
   getModelForClass,
   modelOptions,
@@ -6,6 +6,7 @@ import {
   Ref,
 } from '@typegoose/typegoose';
 import { IUser } from '../user/user.model';
+import { BaseModel } from '@api-base/base-classes/BaseModel';
 
 @modelOptions({
   schemaOptions: {
@@ -13,14 +14,14 @@ import { IUser } from '../user/user.model';
     collection: 'students',
   },
 })
-export class IStudent {
-  @prop({ required: true, _id: false, type: () => INameModel })
-  name: INameModel;
+export class IStudent extends BaseModel {
+  @prop({ required: true, _id: false, type: () => NameModel })
+  name: NameModel;
 
-  @prop({ required: true, type:String })
+  @prop({ required: true, type: String })
   email: string;
 
-  @prop({ required: true, type:Number })
+  @prop({ required: true, type: Number })
   age: number;
 
   @prop({ ref: () => IUser })

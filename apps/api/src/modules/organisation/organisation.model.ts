@@ -5,8 +5,9 @@ import {
   Ref,
 } from '@typegoose/typegoose';
 import { BoardType, OrganisationType } from './OrgEnums';
-import { IAddress, ISocialMedia, IContactInfo } from '@api-base/common-schemas';
+import { ISocialMedia, IContactInfo, Address } from '@api-base/common-schemas';
 import { IUser } from '../user/user.model';
+import { BaseModel } from '@api-base/base-classes/BaseModel';
 
 @modelOptions({
   schemaOptions: {
@@ -16,11 +17,17 @@ import { IUser } from '../user/user.model';
     toObject: { virtuals: true },
   },
 })
-export class IOrganisation {
+export class IOrganisation extends BaseModel {
   @prop({ required: true, type: String })
   name!: string;
 
-  @prop({ required: false, unique: true, lowercase: true, type: String, sparse: true })
+  @prop({
+    required: false,
+    unique: true,
+    lowercase: true,
+    type: String,
+    sparse: true,
+  })
   slug?: string;
 
   @prop({ required: false, type: String })
@@ -44,8 +51,8 @@ export class IOrganisation {
   @prop({ required: true, enum: OrganisationType, type: String })
   organisationType!: OrganisationType;
 
-  @prop({ required: false, type: () => [IAddress] })
-  address?: IAddress[];
+  @prop({ required: false, type: () => [Address] })
+  address?: Address[];
 
   @prop({ required: true, enum: BoardType, type: String })
   boardType!: BoardType;

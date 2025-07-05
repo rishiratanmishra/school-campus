@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
-import { BaseService, ServiceOptions } from './BaseService';
+import { AuthUser, BaseService, ServiceOptions } from './BaseService';
 import { ApiResponse } from './response';
+
+interface AuthenticatedRequest extends Request {
+  user?: AuthUser;
+}
 
 export class BaseController<T> {
   protected service: BaseService<T>;
@@ -12,9 +16,9 @@ export class BaseController<T> {
   /**
    * Create new record
    */
-  handleCreate = async (req: Request, res: Response): Promise<void> => {
+  handleCreate = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const data = await this.service.create(req.body);
+      const data = await this.service.create(req.body, req.user);
       ApiResponse.success(res, 'Created successfully', data, 201);
     } catch (error: any) {
       if (error.code === 11000) {
@@ -74,7 +78,7 @@ export class BaseController<T> {
   /**
    * Update record by ID
    */
-  handleUpdate = async (req: Request, res: Response): Promise<void> => {
+  handleUpdate = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const _id = req.params._id;
       if (!_id) {
@@ -82,7 +86,7 @@ export class BaseController<T> {
         return;
       }
 
-      const data = await this.service.updateById(_id, req.body);
+    const data = await this.service.updateById(_id, req.body, req.user); 
       if (!data) {
         ApiResponse.error(res, 'Record not found', 404);
         return;

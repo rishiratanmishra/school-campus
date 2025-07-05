@@ -1,12 +1,40 @@
 export const getInitials = (name: string): string => {
-  if (!name) return '';
+  const trimmed = name.trim();
+  if (!trimmed) return 'U';
 
-  const parts = name.split(' ');
-  if (parts.length === 0) return '';
+  const parts = trimmed
+    .split(' ')
+    .map((p) => p.trim())
+    .filter(Boolean);
 
-  const firstInitial = parts[0].charAt(0).toUpperCase();
-  const lastInitial =
-    parts.length > 1 ? parts[parts.length - 1].charAt(0).toUpperCase() : '';
+  const first = parts[0]?.[0]?.toUpperCase() || '';
+  const second =
+    parts.length > 1
+      ? parts[1]?.[0]?.toUpperCase()
+      : parts[0]?.[1]?.toUpperCase() || '';
 
-  return firstInitial + lastInitial;
+  const initials = (first + second).slice(0, 2);
+  return initials || 'U';
+};
+
+
+
+type NameObject = {
+  first?: string;
+  middle?: string;
+  last?: string;
+} | string;
+
+export const convertObjectNameToString = (name: NameObject): string => {
+  if (typeof name === 'string') {
+    return name;
+  }
+
+  if (!name || typeof name !== 'object') return '';
+  const { first, middle, last } = name;
+  const parts = [first, middle, last]
+    .map((part) => part?.trim())
+    .filter((part) => !!part);
+
+  return parts.join(' ');
 };

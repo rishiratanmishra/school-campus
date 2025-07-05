@@ -1,9 +1,20 @@
-import { Model, Document, FilterQuery, SortOrder } from 'mongoose';
+import mongoose, { Model, Document, FilterQuery, SortOrder } from 'mongoose';
 
 export interface PaginationOptions {
   page?: number;
   limit?: number;
   sort?: Record<string, SortOrder>;
+}
+
+// Updated to match your middleware structure
+export interface AuthUser {
+  _id: string;
+  name?: string | { first?: string; middle?: string; last?: string };
+  role?: string;
+  organisation?: {
+    _id: string;
+    name?: string;
+  };
 }
 
 export interface FilterOptions {
@@ -47,15 +58,158 @@ export class BaseService<T> {
   }
 
   /**
+   * Helper method to format user name properly
+   */
+  private formatUserName(
+    name?: string | { first?: string; middle?: string; last?: string }
+  ): string {
+    if (!name) return '';
+
+    // If name is already a string, check if it's a stringified object
+    if (typeof name === 'string') {
+      // Try to parse if it looks like a stringified object
+      if (name.startsWith('{') && name.includes('first')) {
+        try {
+          // Use a safer approach to parse the stringified object
+          const jsonString = name
+            .replace(/'/g, '"') // Replace single quotes with double quotes
+            .replace(/(\w+):/g, '"$1":'); // Add quotes around property names
+
+          const parsed = JSON.parse(jsonString);
+          if (parsed && typeof parsed === 'object') {
+            const parts = [];
+            if (parsed.first) parts.push(parsed.first);
+            if (parsed.middle) parts.push(parsed.middle);
+            if (parsed.last) parts.push(parsed.last);
+            return parts.join(' ');
+          }
+        } catch (e) {
+          // If parsing fails, try regex extraction as fallback
+          const firstMatch = name.match(/first:\s*'([^']+)'/);
+          const middleMatch = name.match(/middle:\s*'([^']+)'/);
+          const lastMatch = name.match(/last:\s*'([^']+)'/);
+
+          const parts = [];
+          if (firstMatch) parts.push(firstMatch[1]);
+          if (middleMatch) parts.push(middleMatch[1]);
+          if (lastMatch) parts.push(lastMatch[1]);
+
+          return parts.length > 0 ? parts.join(' ') : name;
+        }
+      }
+      return name;
+    }
+
+    // If name is an object with first, middle, last properties
+    if (typeof name === 'object') {
+      const parts = [];
+      if (name.first) parts.push(name.first);
+      if (name.middle) parts.push(name.middle);
+      if (name.last) parts.push(name.last);
+      return parts.join(' ');
+    }
+
+    return '';
+  }
+
+  /**
+   * Helper method to create user object with proper ObjectId conversion
+   */
+  private createUserObject(user: AuthUser) {
+    return {
+      _id: new mongoose.Types.ObjectId(user._id),
+      name: this.formatUserName(user.name),
+    };
+  }
+
+  /**
+   * Helper method to create organisation object with proper ObjectId conversion
+   */
+  private createOrganisationObject(organisation: {
+    _id: string;
+    name?: string;
+  }) {
+    return {
+      _id: new mongoose.Types.ObjectId(organisation._id),
+      name: organisation.name || '',
+    };
+  }
+
+  /**
    * Create a new document
    */
-  async create(data: Partial<T>): Promise<T> {
-    try {
-      const document = await this.model.create(data);
-      return document;
-    } catch (error) {
-      throw error;
+  async create(data: Partial<T>, user?: AuthUser): Promise<T> {
+    console.log('BaseService.create called with user:', user);
+
+    const documentData: any = { ...data };
+
+    if (user) {
+      if (user.organisation) {
+        documentData.organisation = this.createOrganisationObject(
+          user.organisation
+        );
+      }
+
+      documentData.createdBy = this.createUserObject(user);
+      documentData.updatedBy = this.createUserObject(user);
+    } else {
+      console.log('No user provided to BaseService.create');
     }
+
+    console.log(
+      'Final document data before create:',
+      JSON.stringify(documentData, null, 2)
+    );
+
+    const createdDocument = await this.model.create(documentData);
+    console.log('Document created successfully:', createdDocument);
+
+    return createdDocument;
+  }
+
+  /**
+   * Update a document by ID
+   */
+  async updateById(
+    _id: string,
+    updateData: Partial<T>,
+    user?: AuthUser
+  ): Promise<T | null> {
+    console.log('BaseService.updateById called with user:', user);
+
+    const dataToUpdate: any = { ...updateData };
+
+    if (user) {
+      console.log('Adding updated user information');
+
+      // Add organisation if present (before updatedBy)
+      if (user.organisation) {
+        console.log('Adding organisation information:', user.organisation);
+        dataToUpdate.organisation = this.createOrganisationObject(
+          user.organisation
+        );
+      }
+
+      // Add updatedBy information at the end with proper ObjectId conversion
+      dataToUpdate.updatedBy = this.createUserObject(user);
+    } else {
+      console.log('No user provided to BaseService.updateById');
+    }
+
+    console.log('Final update data:', JSON.stringify(dataToUpdate, null, 2));
+
+    const updatedDocument = await this.model.findByIdAndUpdate(
+      _id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    console.log('Document updated successfully:', updatedDocument);
+
+    return updatedDocument;
   }
 
   /**
@@ -73,7 +227,7 @@ export class BaseService<T> {
         preFilter = {},
         postFilter = {},
         dateRange,
-        customFilters = {}
+        customFilters = {},
       } = options;
 
       // Build the query filter
@@ -82,8 +236,8 @@ export class BaseService<T> {
       // Apply search functionality
       if (searchTerm && searchKeys.length > 0) {
         const searchRegex = new RegExp(searchTerm, 'i');
-        queryFilter.$or = searchKeys.map(key => ({
-          [key]: { $regex: searchRegex }
+        queryFilter.$or = searchKeys.map((key) => ({
+          [key]: { $regex: searchRegex },
         })) as FilterQuery<T>[];
       }
 
@@ -91,22 +245,26 @@ export class BaseService<T> {
       if (dateRange) {
         const { field, startDate, endDate } = dateRange;
         const dateFilter: any = {};
-        
+
         if (startDate) {
           dateFilter.$gte = new Date(startDate);
         }
         if (endDate) {
           dateFilter.$lte = new Date(endDate);
         }
-        
+
         if (Object.keys(dateFilter).length > 0) {
           (queryFilter as any)[field] = dateFilter;
         }
       }
 
       // Apply custom filters
-      Object.keys(customFilters).forEach(key => {
-        if (customFilters[key] !== undefined && customFilters[key] !== null && customFilters[key] !== '') {
+      Object.keys(customFilters).forEach((key) => {
+        if (
+          customFilters[key] !== undefined &&
+          customFilters[key] !== null &&
+          customFilters[key] !== ''
+        ) {
           (queryFilter as any)[key] = customFilters[key];
         }
       });
@@ -119,7 +277,7 @@ export class BaseService<T> {
 
       // Build projection to hide specified keys
       const projection: Record<string, number> = {};
-      hideKeys.forEach(key => {
+      hideKeys.forEach((key) => {
         projection[key] = 0;
       });
 
@@ -132,7 +290,7 @@ export class BaseService<T> {
           .limit(limit)
           .lean(),
         this.model.countDocuments({}),
-        this.model.countDocuments(queryFilter)
+        this.model.countDocuments(queryFilter),
       ]);
 
       // Calculate pagination info
@@ -148,13 +306,13 @@ export class BaseService<T> {
           count: data.length,
           totalRecords: filteredCount,
           hasNext,
-          hasPrev
+          hasPrev,
         },
         filters: {
           applied: queryFilter,
           searchTerm,
-          totalFiltered: filteredCount
-        }
+          totalFiltered: filteredCount,
+        },
       };
     } catch (error) {
       throw error;
@@ -167,7 +325,7 @@ export class BaseService<T> {
   async findById(_id: string, hideKeys: string[] = []): Promise<T | null> {
     try {
       const projection: Record<string, number> = {};
-      hideKeys.forEach(key => {
+      hideKeys.forEach((key) => {
         projection[key] = 0;
       });
 
@@ -181,10 +339,13 @@ export class BaseService<T> {
   /**
    * Find a single document by filter
    */
-  async findOne(filter: FilterQuery<T>, hideKeys: string[] = []): Promise<T | null> {
+  async findOne(
+    filter: FilterQuery<T>,
+    hideKeys: string[] = []
+  ): Promise<T | null> {
     try {
       const projection: Record<string, number> = {};
-      hideKeys.forEach(key => {
+      hideKeys.forEach((key) => {
         projection[key] = 0;
       });
 
@@ -196,30 +357,17 @@ export class BaseService<T> {
   }
 
   /**
-   * Update a document by ID
-   */
-  async updateById(_id: string, updateData: Partial<T>): Promise<T | null> {
-    try {
-      const document = await this.model.findByIdAndUpdate(
-        _id,
-        updateData,
-        { new: true, runValidators: true }
-      );
-      return document;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
    * Update multiple documents
    */
-  async updateMany(filter: FilterQuery<T>, updateData: Partial<T>): Promise<{ matchedCount: number; modifiedCount: number }> {
+  async updateMany(
+    filter: FilterQuery<T>,
+    updateData: Partial<T>
+  ): Promise<{ matchedCount: number; modifiedCount: number }> {
     try {
       const result = await this.model.updateMany(filter, updateData);
       return {
         matchedCount: result.matchedCount,
-        modifiedCount: result.modifiedCount
+        modifiedCount: result.modifiedCount,
       };
     } catch (error) {
       throw error;
@@ -253,7 +401,10 @@ export class BaseService<T> {
   /**
    * Get distinct values for a field
    */
-  async getDistinct(field: string, filter: FilterQuery<T> = {}): Promise<any[]> {
+  async getDistinct(
+    field: string,
+    filter: FilterQuery<T> = {}
+  ): Promise<any[]> {
     try {
       const distinctValues = await this.model.distinct(field, filter);
       return distinctValues;
@@ -324,19 +475,26 @@ export class BaseService<T> {
       const now = new Date();
       const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-      const [total, recentlyCreated, recentlyUpdated, activeCount] = await Promise.all([
-        this.model.countDocuments(filter),
-        this.model.countDocuments({ ...filter, createdAt: { $gte: last30Days } }),
-        this.model.countDocuments({ ...filter, updatedAt: { $gte: last30Days } }),
-        this.model.countDocuments({ ...filter, isActive: true })
-      ]);
+      const [total, recentlyCreated, recentlyUpdated, activeCount] =
+        await Promise.all([
+          this.model.countDocuments(filter),
+          this.model.countDocuments({
+            ...filter,
+            createdAt: { $gte: last30Days },
+          }),
+          this.model.countDocuments({
+            ...filter,
+            updatedAt: { $gte: last30Days },
+          }),
+          this.model.countDocuments({ ...filter, isActive: true }),
+        ]);
 
       return {
         total,
         active: activeCount,
         inactive: total - activeCount,
         recentlyCreated,
-        recentlyUpdated
+        recentlyUpdated,
       };
     } catch (error) {
       throw error;

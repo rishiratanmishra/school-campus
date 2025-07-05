@@ -14,7 +14,6 @@ const Page = () => {
   return (
     <>
       <AdminDashboard />
-      {/* <AddOrganisationForm/> */}
     </>
   );
 };

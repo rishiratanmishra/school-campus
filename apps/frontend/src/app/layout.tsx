@@ -1,17 +1,14 @@
+'use client';
+
 import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/lib/providers/ThemeProvider';
 import ReactQueryProvider from '@/lib/providers/ReactQueryProvider';
 import { Toaster } from 'sonner';
 
-const inter = Inter({ subsets: ['latin'] });
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from '@/store'; 
 
-export const metadata: Metadata = {
-  title: 'School SaaS App',
-  description:
-    'Streamlining school management for low to mid-level institutions',
-};
 
 export default function RootLayout({
   children,
@@ -23,8 +20,12 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <ReactQueryProvider>
-              <Toaster richColors position="top-right" />
-              {children}
+            <Provider store={store}>
+              <PersistGate loading={null} persistor={persistor}>
+                <Toaster richColors position="top-right" />
+                {children}
+              </PersistGate>
+            </Provider>
           </ReactQueryProvider>
         </ThemeProvider>
       </body>

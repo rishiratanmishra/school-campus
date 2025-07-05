@@ -1,5 +1,5 @@
 import { prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
-import { INameModel } from '@api-base/common-schemas/index';
+import {  NameModel } from '@api-base/common-schemas/index';
 import { BaseModel } from '@api-base/base-classes/BaseModel';
 
 export enum UserRole {
@@ -7,6 +7,7 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   STUDENT = 'STUDENT',
   TEACHER = 'TEACHER',
+  MANAGER = 'MANAGER',
 }
 
 @modelOptions({
@@ -15,9 +16,9 @@ export enum UserRole {
     collection: 'users',
   },
 })
-export class IUser{
-  @prop({ _id: false, type: () => INameModel })
-  name?: INameModel;
+export class IUser extends BaseModel {
+  @prop({ _id: false, type: () => NameModel })
+  name?: NameModel;
 
   @prop({ required: true, unique: true, lowercase: true, type: String })
   email!: string;
@@ -30,6 +31,12 @@ export class IUser{
 
   @prop({ default: true, type: Boolean })
   isActive!: boolean;
+
+  @prop({ default: false, type: Boolean })
+  isDelete!: boolean;
+
+  @prop({ type: String })
+  refreshTokenHash?: string;
 }
 
 export const UserModel = getModelForClass(IUser);
