@@ -9,6 +9,10 @@ export interface AuthenticatedRequest extends Request {
     _id: string;
     role: string;
     name?: string;
+    organisation?: {
+      _id: string;
+      name?: string;
+    };
   };
 }
 
@@ -31,7 +35,10 @@ export const authenticate = async (
   try {
     const decoded = jwt.verify(token, config.jwtSecret) as { _id: string };
 
-    const user = await UserModel.findById(decoded._id).select('name role'); // don't fetch password
+    // IMPORTANT: Populate the organisation field to get organisation data
+    const user = await UserModel.findById(decoded._id)
+      .select('name role organisation')
+      .populate('organisation', 'name'); // Populate organisation with name field
 
     if (!user) {
       res
@@ -40,14 +47,24 @@ export const authenticate = async (
       return;
     }
 
+    console.log('Found user in middleware:', user);
+
     req.user = {
       _id: user._id.toString(),
       role: user.role || 'USER',
       name: user.name?.toString() || undefined,
+      // Add organisation information if it exists
+      organisation: user.organisation ? {
+        _id: (user.organisation as any)._id.toString(),
+        name: (user.organisation as any).name
+      } : undefined
     };
+
+    console.log('Set req.user in middleware:', req.user);
 
     next();
   } catch (err) {
+    console.error('JWT verification error:', err);
     res.status(401).json({ success: false, message: 'Invalid token' });
   }
 };
