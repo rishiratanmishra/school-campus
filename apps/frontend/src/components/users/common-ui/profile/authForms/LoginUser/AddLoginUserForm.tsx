@@ -70,7 +70,7 @@ const AddLoginUserForm = () => {
       });
 
       setTimeout(() => {
-        router.push('/admin');
+        router.push('/');
       }, 100);
     } catch (err: any) {
       console.error('Login error:', err);
