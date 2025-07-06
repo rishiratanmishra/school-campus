@@ -6,10 +6,11 @@ import { useCreateNewUser } from '@/service/UserService';
 import { toast } from 'sonner';
 import { FormikHelpers } from 'formik';
 import { IUserFormValues } from './CreateUserForm';
+import { useRouter } from 'next/navigation';
 
 const AddCreateUserForm = () => {
   const createNewUser = useCreateNewUser();
-
+  const router = useRouter();
   const initialValues: IUserFormValues = {
     name: { first: '', middle: '', last: '' },
     email: '',
@@ -23,6 +24,7 @@ const AddCreateUserForm = () => {
     try {
       await createNewUser.mutateAsync(values);
       toast.success('User created successfully');
+      router.push('/login');
       actions.resetForm();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to create user');
@@ -32,13 +34,11 @@ const AddCreateUserForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 shadow-lg rounded-lg">
-      <CreateUserForm
-        initialValues={initialValues}
-        handleSubmit={handleSubmit}
-        isSubmitting={createNewUser.isPending}
-      />
-    </div>
+    <CreateUserForm
+      initialValues={initialValues}
+      handleSubmit={handleSubmit}
+      isSubmitting={createNewUser.isPending}
+    />
   );
 };
 

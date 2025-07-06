@@ -59,10 +59,18 @@ const AddLoginUserForm = () => {
         }
       }
 
-      toast.success(response.message || 'Login successful');
+      // Success toast with modern styling
+      toast.success(response.message || 'Welcome back! Login successful 🎉', {
+        duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          color: 'white',
+        },
+      });
 
       setTimeout(() => {
-        router.push('/admin/gg');
+        router.push('/admin');
       }, 100);
     } catch (err: any) {
       console.error('Login error:', err);
@@ -70,7 +78,15 @@ const AddLoginUserForm = () => {
       const errorMessage =
         err?.response?.data?.message || err?.message || 'Login failed';
 
-      toast.error(errorMessage);
+      // Error toast with modern styling
+      toast.error(errorMessage, {
+        duration: 4000,
+        style: {
+          background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          color: 'white',
+        },
+      });
 
       if (err?.response?.data?.errors) {
         const errors = err.response.data.errors;
@@ -87,22 +103,11 @@ const AddLoginUserForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 shadow-lg rounded-lg">
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Welcome Back
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Please sign in to your account
-        </p>
-      </div>
-
-      <LoginUserForm
-        initialValues={initialValues}
-        handleSubmit={handleSubmit}
-        isSubmitting={loginUser.isPending}
-      />
-    </div>
+    <LoginUserForm
+      initialValues={initialValues}
+      handleSubmit={handleSubmit}
+      isSubmitting={loginUser.isPending}
+    />
   );
 };
 
