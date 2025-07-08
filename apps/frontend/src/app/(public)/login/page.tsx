@@ -1,9 +1,11 @@
 'use client';
 
 import AddLoginUserForm from '@/components/users/common-ui/profile/authForms/LoginUser/AddLoginUserForm';
+import { selectIsAuthenticated } from '@/store/auth/AuthenticationSlice';
 import { motion } from 'framer-motion';
 import { LogIn, Users, BookOpen, Target, Sparkles } from 'lucide-react';
-import React from 'react';
+import React, { use, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 const LoginPage = () => {
   const features = [
@@ -11,6 +13,14 @@ const LoginPage = () => {
     { icon: BookOpen, text: 'Access resources' },
     { icon: Target, text: 'Track progress' },
   ];
+
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = '/dashboard';
+    }
+  }, [isAuthenticated]);
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">

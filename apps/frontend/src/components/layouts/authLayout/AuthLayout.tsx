@@ -14,8 +14,15 @@ import {
   clearAuth,
 } from '@/store/auth/AuthenticationSlice';
 import { RootState, AppDispatch } from '@/store';
-import { convertObjectNameToString, getInitials } from '@/components/helpers/helpers';
-import { themeStorage, LOCAL_STORAGE_DARK_KEY, LOCAL_STORAGE_THEME_KEY } from '../Themes/ThemeStorage';
+import {
+  convertObjectNameToString,
+  getInitials,
+} from '@/components/helpers/helpers';
+import {
+  themeStorage,
+  LOCAL_STORAGE_DARK_KEY,
+  LOCAL_STORAGE_THEME_KEY,
+} from '../Themes/ThemeStorage';
 import { UserDropdown } from './UserDropdown';
 
 interface AuthLayoutProps {
@@ -51,6 +58,11 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [isAuthenticated, router, isClient]);
 
+  useEffect(() => {
+    if (user != 'ADMIN') {
+      router.back();
+    }
+  }, [user]);
   // Load theme settings on mount
   useEffect(() => {
     if (!isClient) return;

@@ -13,7 +13,7 @@ const SignUpPage = () => {
   ];
 
   return (
-    <div className="h-screen w-full relative overflow-hidden">
+    <div className="min-h-screen w-full relative overflow-hidden">
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.3),transparent_50%)]" />
@@ -46,7 +46,7 @@ const SignUpPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 h-full w-full flex items-center justify-center px-4 py-6">
+      <div className="relative z-10 min-h-screen w-full flex items-center justify-center px-4 py-6 overflow-y-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] h-full w-full max-w-7xl mx-auto items-center gap-6">
           {/* Left Content */}
           <motion.div
@@ -90,12 +90,12 @@ const SignUpPage = () => {
 
           {/* Right Form */}
           <motion.div
-            className="w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto rounded-2xl scrollbar-hide"
+            className="w-full max-w-md mx-auto my-auto rounded-2xl scrollbar-hide"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 sm:p-8 relative">
+            <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl  relative">
               <AddCreateUserForm />
             </div>
           </motion.div>

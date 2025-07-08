@@ -7,8 +7,18 @@ import { FormikForm } from '@/components/ui/data-entry/FormikForm';
 import { CNTextInputField } from '@/components/ui/fields';
 import { validateZodSchemaFormik } from '@/components/ui/data-entry/ZodHelper';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, Eye, EyeOff, Sparkles } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  User,
+  Shield,
+  Link,
+} from 'lucide-react';
 import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 
 export const LoginZodSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
@@ -27,152 +37,168 @@ const LoginFormContent: React.FC<{ isSubmitting?: boolean }> = ({
   isSubmitting,
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
-
+  const router = useRouter();
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
+    <div className="space-y-2">
+      {/* Header */}
       <motion.div
         className="text-center mb-8"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
       >
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 backdrop-blur-sm rounded-2xl border border-white/20">
-            <LogIn className="h-6 w-6 text-white" />
+        {/* <div className="flex justify-center mb-6">
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <User className="h-8 w-8 text-white" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+              <Shield className="h-3 w-3 text-white" />
+            </div>
           </div>
+        </div> */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+        <p className="text-gray-600">Sign in to your School Campus account</p>
+      </motion.div>
+
+      {/* Email Field */}
+      <motion.div
+        className="space-y-2"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <label htmlFor="email" className="text-sm font-medium text-gray-700">
+          Email Address
+        </label>
+        <div className="relative group">
+          <CNTextInputField
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            className="w-full h-12 bg-white border-2 border-gray-200 rounded-xl px-4 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200"
+          />
+          <Mail
+            style={{ top: '36%' }}
+            className="absolute right-4 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+          />
         </div>
-        <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-        <p className="text-white/70 text-sm">
-          Sign in to continue your journey with Campus Connect
-        </p>
       </motion.div>
 
-      {/* Form Fields */}
+      {/* Password Field */}
       <motion.div
-        className="space-y-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
+        className="space-y-2"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
       >
-        {/* Email Field */}
-        <motion.div
-          className="relative group"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 rounded-xl blur-sm group-hover:blur-none transition-all duration-300" />
-          <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-1 group-hover:border-white/30 transition-all duration-300">
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 text-white/50 ml-3 mr-2" />
-              <CNTextInputField
-                label="Email"
-                name="email"
-                type="email"
-                placeholder="your@email.com"
-                required
-                className="bg-transparent border-0 text-white placeholder-white/50 focus:ring-2 focus:ring-indigo-500/50 rounded-lg px-1 py-3 flex-1"
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Password Field */}
-        <motion.div
-          className="relative group"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl blur-sm group-hover:blur-none transition-all duration-300" />
-          <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-1 group-hover:border-white/30 transition-all duration-300">
-            <div className="flex items-center">
-              <Lock className="h-4 w-4 text-white/50 ml-3 mr-2" />
-              <CNTextInputField
-                label="Password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                required
-                className="bg-transparent border-0 text-white placeholder-white/50 focus:ring-2 focus:ring-indigo-500/50 rounded-lg px-1 py-3 flex-1"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="p-2 text-white/50 hover:text-white transition-colors duration-200"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-        </motion.div>
+        <label htmlFor="password" className="text-sm font-medium text-gray-700">
+          Password
+        </label>
+        <div className="relative group">
+          <CNTextInputField
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            className="w-full h-12 bg-white border-2 border-gray-200 rounded-xl px-4 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4  transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:text-blue-500 transition-colors"
+            style={{ top: '36%' }}
+          >
+            {showPassword ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </motion.div>
 
-      {/* Forgot Password Link */}
+      {/* Remember Me & Forgot Password */}
       <motion.div
-        className="text-right"
+        className="flex items-center justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
       >
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="w-4 h-4 text-blue-500 bg-white border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          />
+          <span className="text-sm text-gray-600">Remember me</span>
+        </label>
         <a
           href="#"
-          className="text-sm text-indigo-400 hover:text-purple-400 transition-colors duration-300 hover:underline"
+          className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
         >
-          Forgot your password?
+          Forgot password?
         </a>
       </motion.div>
 
       {/* Submit Button */}
       <motion.div
-        className="pt-2"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <Button
           type="submit"
-          className="w-full relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white border-0 rounded-xl h-12 font-medium text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+          className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
           disabled={isSubmitting}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="relative z-10 flex items-center justify-center">
+          <div className="flex items-center justify-center space-x-2">
             {isSubmitting ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Signing In...</span>
               </>
             ) : (
               <>
-                <Sparkles className="h-5 w-5 mr-2" />
                 <span>Sign In</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </div>
         </Button>
       </motion.div>
 
-      {/* Sign Up Link */}
+      {/* Divider */}
       <motion.div
-        className="text-center pt-4"
+        className="relative my-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
       >
-        <p className="text-white/60 text-sm">
-          Don't have an account?{' '}
-          <a
-            href="#"
-            className="text-indigo-400 hover:text-purple-400 font-medium transition-colors duration-300 hover:underline"
-          >
-            Sign up here
-          </a>
-        </p>
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-3 bg-gray-50 text-gray-500">
+            New to School Campus?
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Sign Up Link */}
+      <motion.div
+        className="text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+      >
+        <a
+          onClick={() => router.push('/signup')}
+          className="inline-flex items-center space-x-2 text-blue-500 hover:text-blue-600 font-medium transition-colors cursor-pointer"
+        >
+          <span>Create an account</span>
+          <ArrowRight className="h-4 w-4" />
+        </a>
       </motion.div>
     </div>
   );
@@ -194,35 +220,33 @@ const LoginUserForm: React.FC<LoginFormProps> = ({
 }) => {
   return (
     <motion.div
-      className="w-full max-w-md mx-auto h-full flex items-center justify-center"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      className="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center rounded-2xl"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
     >
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 md:p-10 relative overflow-hidden w-full">
-        {/* Glass effect overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/10 to-transparent rounded-3xl" />
+      <div className="w-full max-w-md">
+        <motion.div
+          className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 relative overflow-hidden"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -translate-y-10 translate-x-10" />
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-full translate-y-8 -translate-x-8" />
 
-        {/* Floating elements */}
-        <div className="absolute top-4 right-4 w-2 h-2 bg-indigo-400/30 rounded-full animate-pulse" />
-        <div
-          className="absolute bottom-4 left-4 w-3 h-3 bg-purple-400/30 rounded-full animate-pulse"
-          style={{ animationDelay: '1s' }}
-        />
-        <div
-          className="absolute top-1/2 left-2 w-1 h-1 bg-pink-400/30 rounded-full animate-pulse"
-          style={{ animationDelay: '2s' }}
-        />
-
-        <div className="relative z-10">
-          <FormikForm
-            initialValues={initialValues}
-            onSubmit={handleSubmit}
-            validate={validateForm}
-          >
-            <LoginFormContent isSubmitting={isSubmitting} />
-          </FormikForm>
-        </div>
+          {/* Form Content */}
+          <div className="relative z-10">
+            <FormikForm
+              initialValues={initialValues}
+              onSubmit={handleSubmit}
+              validate={validateForm}
+            >
+              <LoginFormContent isSubmitting={isSubmitting} />
+            </FormikForm>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );

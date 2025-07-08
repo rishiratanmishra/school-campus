@@ -4,7 +4,9 @@ import UserProfileCard from '../Profile/ProfileCard/ProfileCard';
 const DashboardCards = () => {
   return (
     <>
-      Children will be rendered here
+      <div>
+        
+      </div>
     </>
   );
 };
