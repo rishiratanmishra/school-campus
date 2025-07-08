@@ -285,8 +285,10 @@ const CreateUserFormContent: React.FC<{
                   placeholder="your@email.com"
                   className="w-full h-12 bg-white border-2 border-gray-200 rounded-xl px-4 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200"
                 />
-                <Mail             style={{ top: '36%' }}
- className="absolute right-4  transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <Mail
+                  style={{ top: '36%' }}
+                  className="absolute right-4  transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                />
               </div>
             </div>
           </motion.div>
