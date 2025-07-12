@@ -21,9 +21,7 @@ export class BaseController<T> {
       const data = await this.service.create(req.body, req.user);
       ApiResponse.success(res, 'Created successfully', data, 201);
     } catch (error: any) {
-      if (error.code === 11000) {
-        ApiResponse.error(res, 'Duplicate entry', 400);
-      } else if (error.name === 'ValidationError') {
+       if (error.name === 'ValidationError') {
         ApiResponse.error(res, 'Validation failed', 400, error.message);
       } else {
         ApiResponse.error(res, 'Creation failed', 500, error.message);

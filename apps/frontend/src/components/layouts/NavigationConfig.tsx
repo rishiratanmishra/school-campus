@@ -11,3 +11,13 @@ export const sidebarItems = [
   { icon: Mail, label: 'Messages', href: '/messages', badge: '5' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ]
+
+export const StudentNavigationItems = [
+  { icon: Home, label: 'Dashboard', href: '/dashboard', active: true },
+  { icon: Calendar, label: 'Timetable', href: '/timetable' },
+  { icon: FileText, label: 'Assignments', href: '/assignments' },
+  { icon: Mail, label: 'Messages', href: '/messages', badge: '5' },
+  { icon: Settings, label: 'Settings', href: '/settings' },
+  { icon: Bell, label: 'Notifications', href: '/notifications', badge: '3' },
+  { icon: ShoppingCart, label: 'Shop', href: '/shop' },
+]

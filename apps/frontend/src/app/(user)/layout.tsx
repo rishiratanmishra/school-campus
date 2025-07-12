@@ -1,25 +1,26 @@
 'use client';
 
-import AuthLayout from '@/components/layouts/authLayout/AuthLayout';
-import '../../app/globals.css';
-import { QueryClient } from '@tanstack/react-query';
+import UserLayout from '@/components/layouts/authLayout/UserLayout/UserLayout';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/store/auth/AuthenticationSlice';
+import AuthGuard from '@/lib/providers/AuthGuard';
+import AdminLayout from '@/components/layouts/authLayout/AdminLayout';
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // 10 minutes in milliseconds
-      staleTime: 600000,
-    },
-  },
-});
-export default function RootLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = useSelector(selectCurrentUser);
+  const role = user?.role;
+
   return (
-    <>
-      <AuthLayout>{children}</AuthLayout>
-    </>
+    <AuthGuard>
+      {role === 'ADMIN' ? (
+        <AdminLayout>{children}</AdminLayout>
+      ) : (
+        <UserLayout>{children}</UserLayout>
+      )}
+    </AuthGuard>
   );
 }

@@ -1,99 +1,144 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
-import { callApi, TokenManager } from '@/lib/callApi';
-import { queryClient } from '@/app/(user)/layout';
+import { callApi } from '@/lib/callApi';
 import { QUERY_KEYS } from '.';
+import { useSelector } from 'react-redux';
+import {
+  selectAccessToken,
+  selectRefreshToken,
+} from '@/store/auth/AuthenticationSlice';
+import { queryClient } from '@/lib/providers/ReactQueryProvider';
 
-const USER_BASE_URL = '/users'; // Base URL will be added by Axios instance
+const USER_BASE_URL = '/users';
 
-// 🔐 LOGIN
-export const loginUser = (payload: { email: string; password: string }) => (axios: AxiosInstance) =>
-  axios.post(`${USER_BASE_URL}/login`, payload); // Fixed: was just '/login'
+// --------------------------------------
+// LOGIN
+// --------------------------------------
 
-export const useLoginUser = () =>
-  useMutation({
+export const loginUser =
+  (payload: { email: string; password: string }) => (axios: AxiosInstance) =>
+    axios.post(`${USER_BASE_URL}/login`, payload);
+
+export const useLoginUser = () => {
+  return useMutation({
     mutationFn: (payload: { email: string; password: string }) =>
       callApi({ requestFunction: loginUser(payload) }),
-    onSuccess: (data) => {
-      // Store tokens after successful login
-      if (data.tokens) {
-        TokenManager.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
     },
   });
+};
 
-// 🔐 LOGOUT
-export const logoutUser = (payload: { refreshToken: string }) => (axios: AxiosInstance) =>
-  axios.post(`${USER_BASE_URL}/logout`, payload);
+// --------------------------------------
+// LOGOUT
+// --------------------------------------
 
-export const useLogoutUser = () =>
-  useMutation({
-    mutationFn: () => {
-      const refreshToken = TokenManager.getRefreshToken();
-      return callApi({ 
-        requestFunction: logoutUser({ refreshToken: refreshToken || '' })
-      });
-    },
+export const logoutUser =
+  (payload: { refreshToken: string }) => (axios: AxiosInstance) =>
+    axios.post(`${USER_BASE_URL}/logout`, payload);
+
+export const useLogoutUser = () => {
+  const accessToken = useSelector(selectAccessToken);
+  const refreshToken = useSelector(selectRefreshToken);
+
+  return useMutation({
+    mutationFn: () =>
+      callApi({
+        requestFunction: logoutUser({ refreshToken: refreshToken || '' }),
+        accessToken,
+        refreshToken,
+      }),
     onSuccess: () => {
-      TokenManager.clearTokens();
       queryClient.clear();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
     },
   });
+};
 
-// 🔐 REFRESH TOKEN
-export const refreshToken = (payload: { refreshToken: string }) => (axios: AxiosInstance) =>
-  axios.post(`/auth/refresh`, payload);
+// --------------------------------------
+// REFRESH TOKEN
+// --------------------------------------
 
-export const useRefreshToken = () =>
-  useMutation({
-    mutationFn: (payload: { refreshToken: string }) =>
-      callApi({ requestFunction: refreshToken(payload) }),
+const refreshTokenFn =
+  (payload: { refreshToken: string }) => (axios: AxiosInstance) =>
+    axios.post(`/auth/refresh`, payload);
+
+export const useRefreshToken = () => {
+  const refreshToken = useSelector(selectRefreshToken);
+
+  return useMutation({
+    mutationFn: () =>
+      callApi({
+        requestFunction: refreshTokenFn({ refreshToken: refreshToken || '' }),
+        refreshToken,
+      }),
     onSuccess: (data) => {
-      if (data.tokens) {
-        TokenManager.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
-      }
+      // Dispatch setTokens(data.tokens) if needed
     },
   });
+};
 
-// 👤 GET CURRENT LOGGED-IN USER
+// --------------------------------------
+// GET CURRENT USER
+// --------------------------------------
+
 export const getCurrentUser = () => (axios: AxiosInstance) =>
   axios.post(`${USER_BASE_URL}/details`);
 
-export const useCurrentUser = () =>
-  useQuery({
-    queryKey: [QUERY_KEYS.CURRENT_USER],
-    queryFn: () => callApi({ requestFunction: getCurrentUser() }),
-    enabled: TokenManager.isAuthenticated(), // Only run if authenticated
-  });
+export const useCurrentUser = () => {
+  const accessToken = useSelector(selectAccessToken);
+  const refreshToken = useSelector(selectRefreshToken);
 
-// ➕ CREATE NEW USER
+  return useQuery({
+    queryKey: [QUERY_KEYS.CURRENT_USER],
+    queryFn: () =>
+      callApi({
+        requestFunction: getCurrentUser(),
+        accessToken,
+        refreshToken,
+      }),
+    enabled: !!accessToken,
+  });
+};
+
+// --------------------------------------
+// CREATE USER
+// --------------------------------------
+
 export const createNewUser = (payload: any) => (axios: AxiosInstance) =>
   axios.post(`${USER_BASE_URL}/register`, payload);
 
-export const useCreateNewUser = () =>
-  useMutation({
+export const useCreateNewUser = () => {
+  return useMutation({
     mutationFn: (payload: any) =>
       callApi({ requestFunction: createNewUser(payload) }),
-    onSuccess: (data) => {
-      // Store tokens after successful registration
-      if (data.tokens) {
-        TokenManager.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
     },
   });
+};
 
-// 📃 GET USER LIST (Admin only)
+// --------------------------------------
+// GET USER LIST (Admin only)
+// --------------------------------------
+
 export const getUserList = (payload: any) => (axios: AxiosInstance) =>
   axios.post(`${USER_BASE_URL}/list`, payload);
 
-export const useGetUserList = (payload: any) =>
-  useQuery({
+export const useGetUserList = (payload: any) => {
+  const accessToken = useSelector(selectAccessToken);
+  const refreshToken = useSelector(selectRefreshToken);
+
+  return useQuery({
     queryKey: [QUERY_KEYS.USERS, payload],
-    queryFn: () => callApi({ requestFunction: getUserList(payload) }),
-    enabled: TokenManager.isAuthenticated(), // Only run if authenticated
+    queryFn: () =>
+      callApi({
+        requestFunction: getUserList(payload),
+        accessToken,
+        refreshToken,
+      }),
+    enabled: !!accessToken,
   });
+};

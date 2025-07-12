@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Axios, AxiosInstance } from 'axios';
 import { API_BASE_URL, QUERY_KEYS } from '.';
 import { callApi } from '@/lib/callApi';
-import { queryClient } from '@/app/(user)/layout';
+import { queryClient } from '@/lib/providers/ReactQueryProvider';
 
 const TEACHER_BASE_URL = `${API_BASE_URL}/teachers`;
 
