@@ -490,3 +490,8 @@
   background-color: hsl(var(--popover));
   color: hsl(var(--popover-foreground));
 }
+
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+}

@@ -1,13 +1,13 @@
 'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   selectCurrentUser,
   selectIsAuthenticated,
   selectIsAuthInitialized,
 } from '@/store/auth/AuthenticationSlice';
-import { is } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 const Page = () => {
@@ -16,35 +16,51 @@ const Page = () => {
   const isInitialized = useSelector(selectIsAuthInitialized);
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
+  // Redirect authenticated users
+  useEffect(() => {
+    if (!isInitialized || !isAuthenticated) return;
+
+    switch (user?.role) {
+      case 'ADMIN':
+        router.replace('/admin/dashboard');
+        break;
+      case 'STUDENT':
+        router.replace('/student');
+        break;
+      case 'USER':
+        router.replace('/user');
+        break;
+      default:
+        router.replace('/login');
+    }
+  }, [isInitialized, isAuthenticated, user?.role, router]);
+
   if (!isInitialized) {
-    useEffect(() => {
-      router.push('/login');
-    }, [!isInitialized]);
     return (
-      <div className="h-[100vh] w-full flex justify-center items-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen w-full flex justify-center items-center">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
-  useLayoutEffect(() => {
-    if (isAuthenticated && user.role === 'USER') {
-      return;
-    } else if (isAuthenticated && user.role === 'STUDENT') {
-      router.push('/student');
-    } else if (isAuthenticated && user.role === 'ADMIN') {
-      router.push('/admin/gg');
-    }
-  }, [user]);
+  // Unauthenticated user view
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen w-full flex justify-center items-center">
+        <Button
+          className="bg-blue-500 text-white"
+          onClick={() => router.push('/login')}
+        >
+          Login
+        </Button>
+      </div>
+    );
+  }
 
+  // If user is authenticated, but redirect hasn't happened yet
   return (
-    <div className="h-[100vh] w-full flex justify-center items-center">
-      <Button
-        onClick={() => router.push('/admin/gg')}
-        className="bg-blue-500 text-white"
-      >
-        Go to school
-      </Button>
+    <div className="min-h-screen w-full flex justify-center items-center">
+      <p className="text-muted-foreground">Redirecting...</p>
     </div>
   );
 };

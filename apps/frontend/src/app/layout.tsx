@@ -1,14 +1,10 @@
-'use client';
-
+import AppProviders from '@/lib/providers/AppProviders';
 import './globals.css';
-import { ThemeProvider } from '@/lib/providers/ThemeProvider';
-import ReactQueryProvider from '@/lib/providers/ReactQueryProvider';
-import { Toaster } from 'sonner';
 
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from '@/store'; 
-
+export const metadata = {
+  title: 'School Campus',
+  description: 'Campus Management System',
+};
 
 export default function RootLayout({
   children,
@@ -17,17 +13,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <ReactQueryProvider>
-            <Provider store={store}>
-              <PersistGate loading={null} persistor={persistor}>
-                <Toaster richColors position="top-right" />
-                {children}
-              </PersistGate>
-            </Provider>
-          </ReactQueryProvider>
-        </ThemeProvider>
+      <body suppressHydrationWarning>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

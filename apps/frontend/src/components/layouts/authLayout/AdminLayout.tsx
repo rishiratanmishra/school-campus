@@ -7,13 +7,8 @@ import Sidebar from './Sidebar';
 import { themes } from '../Themes/ThemeCampus';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  selectIsAuthenticated,
-  selectCurrentUser,
-  selectIsAuthInitialized,
-  clearAuth,
-} from '@/store/auth/AuthenticationSlice';
-import { RootState, AppDispatch } from '@/store';
+import { selectCurrentUser, clearAuth } from '@/store/auth/AuthenticationSlice';
+import { AppDispatch } from '@/store';
 import {
   convertObjectNameToString,
   getInitials,
@@ -25,11 +20,11 @@ import {
 } from '../Themes/ThemeStorage';
 import { UserDropdown } from './UserDropdown';
 
-interface AuthLayoutProps {
+interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [theme, setTheme] = useState<string>('default');
@@ -39,9 +34,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const [isClient, setIsClient] = useState(false);
 
   // Redux selectors
-  const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-  const isInitialized = useSelector(selectIsAuthInitialized);
   const dispatch = useDispatch<AppDispatch>();
 
   const router = useRouter();
@@ -51,18 +44,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     setIsClient(true);
   }, []);
 
-  // Authentication check
-  useEffect(() => {
-    if (isClient && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, router, isClient]);
-
-  useEffect(() => {
-    if (user != 'ADMIN') {
-      router.back();
-    }
-  }, [user]);
   // Load theme settings on mount
   useEffect(() => {
     if (!isClient) return;
@@ -153,7 +134,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     setTheme(newTheme);
   }, []);
 
-  if (!isClient || !loaded || !isInitialized || !isAuthenticated) {
+  if (!isClient || !loaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

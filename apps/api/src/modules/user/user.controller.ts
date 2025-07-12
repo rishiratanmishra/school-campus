@@ -21,9 +21,15 @@ export class UserController extends BaseController<IUser> {
   /**
    * Generate refresh token and its hash
    */
-  private generateRefreshToken(): { refreshToken: string; refreshTokenHash: string } {
+  private generateRefreshToken(): {
+    refreshToken: string;
+    refreshTokenHash: string;
+  } {
     const refreshToken = crypto.randomBytes(64).toString('hex');
-    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
     return { refreshToken, refreshTokenHash };
   }
 
@@ -43,35 +49,44 @@ export class UserController extends BaseController<IUser> {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Generate refresh token
       const { refreshToken, refreshTokenHash } = this.generateRefreshToken();
 
       const user = await UserModel.create({
         email,
         password: hashedPassword,
         name,
-        refreshTokenHash, // Store the refresh token hash
+        refreshTokenHash,
       });
 
       const userDoc = user as DocumentType<IUser>;
-      
-      // Generate access token
-      const accessToken = signJwt({ _id: userDoc._id.toString(), role: userDoc.role });
-
-      const { password: _, refreshTokenHash: __, ...userWithoutPassword } = userDoc.toObject();
-      
-      res.status(201).json({
-        success: true,
-        message: 'User created successfully',
-        data: userWithoutPassword,
-        tokens: {
-          accessToken,
-          refreshToken, // Send refresh token to client
-        },
+      const accessToken = signJwt({
+        _id: userDoc._id.toString(),
+        role: userDoc.role,
       });
+
+      const {
+        password: _,
+        refreshTokenHash: __,
+        ...userWithoutPassword
+      } = userDoc.toObject();
+
+      res
+        .cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 15 * 60 * 1000, // 15 minutes
+        })
+        .status(201)
+        .json({
+          success: true,
+          message: 'User created successfully',
+          data: userWithoutPassword,
+          tokens: {
+            refreshToken,
+          },
+        });
     } catch (error: any) {
-      console.error('Create user error:', error);
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to create user',
@@ -103,32 +118,39 @@ export class UserController extends BaseController<IUser> {
         return;
       }
 
-      // Generate new refresh token on login
       const { refreshToken, refreshTokenHash } = this.generateRefreshToken();
-      
-      // Update user with new refresh token hash
       await UserModel.findByIdAndUpdate(userDoc._id, { refreshTokenHash });
-
-      // Generate access token
-      const accessToken = signJwt({ _id: userDoc._id.toString(), role: userDoc.role });
-
-      const { password: _, refreshTokenHash: __, ...userWithoutPassword } = userDoc.toObject();
-
-      res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        data: userWithoutPassword,
-        tokens: {
-          accessToken,
-          refreshToken,
-        },
+      const accessToken = signJwt({
+        _id: userDoc._id.toString(),
+        role: userDoc.role,
       });
+
+      const {
+        password: _,
+        refreshTokenHash: __,
+        ...userWithoutPassword
+      } = userDoc.toObject();
+
+      res
+        .cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 15 * 60 * 1000,
+        })
+        .status(200)
+        .json({
+          success: true,
+          message: 'Login successful',
+          data: userWithoutPassword,
+          tokens: {
+            refreshToken,
+          },
+        });
     } catch (error: any) {
-      console.error('Login error:', error);
-      res.status(500).json({
-        success: false,
-        message: error.message || 'Login failed',
-      });
+      res
+        .status(500)
+        .json({ success: false, message: error.message || 'Login failed' });
     }
   };
 
@@ -140,37 +162,54 @@ export class UserController extends BaseController<IUser> {
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
-        res.status(401).json({ success: false, message: 'Refresh token required' });
+        res
+          .status(401)
+          .json({ success: false, message: 'Refresh token required' });
         return;
       }
 
-      // Hash the provided refresh token
-      const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
-
-      // Find user with matching refresh token hash
-      const user = await UserModel.findOne({ refreshTokenHash: hashedRefreshToken });
-      if (!user) {
-        res.status(401).json({ success: false, message: 'Invalid refresh token' });
-        return;
-      }
-
-      // Generate new tokens
-      const { refreshToken: newRefreshToken, refreshTokenHash: newRefreshTokenHash } = this.generateRefreshToken();
-      const newAccessToken = signJwt({ _id: user._id.toString(), role: user.role });
-
-      // Update user with new refresh token hash
-      await UserModel.findByIdAndUpdate(user._id, { refreshTokenHash: newRefreshTokenHash });
-
-      res.status(200).json({
-        success: true,
-        message: 'Token refreshed successfully',
-        tokens: {
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-        },
+      const hashedRefreshToken = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+      const user = await UserModel.findOne({
+        refreshTokenHash: hashedRefreshToken,
       });
+      if (!user) {
+        res
+          .status(401)
+          .json({ success: false, message: 'Invalid refresh token' });
+        return;
+      }
+
+      const {
+        refreshToken: newRefreshToken,
+        refreshTokenHash: newRefreshTokenHash,
+      } = this.generateRefreshToken();
+      const newAccessToken = signJwt({
+        _id: user._id.toString(),
+        role: user.role,
+      });
+      await UserModel.findByIdAndUpdate(user._id, {
+        refreshTokenHash: newRefreshTokenHash,
+      });
+
+      res
+        .cookie('accessToken', newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 15 * 60 * 1000,
+        })
+        .status(200)
+        .json({
+          success: true,
+          message: 'Token refreshed successfully',
+          tokens: {
+            refreshToken: newRefreshToken,
+          },
+        });
     } catch (error: any) {
-      console.error('Refresh token error:', error);
       res.status(500).json({
         success: false,
         message: error.message || 'Token refresh failed',
@@ -186,14 +225,17 @@ export class UserController extends BaseController<IUser> {
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
-        res.status(400).json({ success: false, message: 'Refresh token required' });
+        res
+          .status(400)
+          .json({ success: false, message: 'Refresh token required' });
         return;
       }
 
-      // Hash the provided refresh token
-      const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
+      const hashedRefreshToken = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
 
-      // Find and clear the refresh token
       const user = await UserModel.findOneAndUpdate(
         { refreshTokenHash: hashedRefreshToken },
         { $unset: { refreshTokenHash: 1 } },
@@ -201,20 +243,20 @@ export class UserController extends BaseController<IUser> {
       );
 
       if (!user) {
-        res.status(401).json({ success: false, message: 'Invalid refresh token' });
+        res
+          .status(401)
+          .json({ success: false, message: 'Invalid refresh token' });
         return;
       }
 
-      res.status(200).json({
-        success: true,
-        message: 'Logged out successfully',
-      });
+      res
+        .clearCookie('accessToken')
+        .status(200)
+        .json({ success: true, message: 'Logged out successfully' });
     } catch (error: any) {
-      console.error('Logout error:', error);
-      res.status(500).json({
-        success: false,
-        message: error.message || 'Logout failed',
-      });
+      res
+        .status(500)
+        .json({ success: false, message: error.message || 'Logout failed' });
     }
   };
 
@@ -248,7 +290,10 @@ export class UserController extends BaseController<IUser> {
         ApiResponse.error(res, 'User ID is required', 400);
         return;
       }
-      const user = await this.userService.findById(_id, ['password', 'refreshTokenHash']);
+      const user = await this.userService.findById(_id, [
+        'password',
+        'refreshTokenHash',
+      ]);
       if (!user) {
         ApiResponse.error(res, 'User not found', 404);
         return;
@@ -654,7 +699,10 @@ export class UserController extends BaseController<IUser> {
         return;
       }
 
-      const user = await this.userService.findById(userId, ['password', 'refreshTokenHash']);
+      const user = await this.userService.findById(userId, [
+        'password',
+        'refreshTokenHash',
+      ]);
       if (!user) {
         ApiResponse.error(res, 'User not found', 404);
         return;
@@ -663,7 +711,12 @@ export class UserController extends BaseController<IUser> {
       ApiResponse.success(res, 'Current user retrieved successfully', user);
     } catch (error: any) {
       console.error('Get current user error:', error);
-      ApiResponse.error(res, 'Failed to retrieve current user', 500, error.message);
+      ApiResponse.error(
+        res,
+        'Failed to retrieve current user',
+        500,
+        error.message
+      );
     }
   };
 }

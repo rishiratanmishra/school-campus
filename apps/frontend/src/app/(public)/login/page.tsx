@@ -4,6 +4,7 @@ import AddLoginUserForm from '@/components/users/common-ui/profile/authForms/Log
 import { selectIsAuthenticated } from '@/store/auth/AuthenticationSlice';
 import { motion } from 'framer-motion';
 import { LogIn, Users, BookOpen, Target, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { use, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -15,10 +16,10 @@ const LoginPage = () => {
   ];
 
   const isAuthenticated = useSelector(selectIsAuthenticated);
-
+  const router = useRouter();
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = '/dashboard';
+      router.push('/');
     }
   }, [isAuthenticated]);
 

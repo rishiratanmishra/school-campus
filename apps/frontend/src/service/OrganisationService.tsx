@@ -2,8 +2,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Axios, AxiosInstance } from 'axios';
 import { API_BASE_URL, QUERY_KEYS } from '.';
 import { callApi } from '@/lib/callApi';
-import { queryClient } from '@/app/(user)/layout';
 import { IOrganisationZS } from 'api-definitions/features/organisation/organisation.zod';
+import { queryClient } from '@/lib/providers/ReactQueryProvider';
 
 // ----------------- CONSTANTS ------------------
 const ORGANISATION_BASE_URL = `${API_BASE_URL}/organisation`;
